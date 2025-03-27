@@ -1,0 +1,1993 @@
+<html lang="en">
+  <style>
+    /* Playful sketchy animated UI - Enhanced for better visibility and size */
+    @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap');
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Architects Daughter', cursive;
+        background-color: #faf9f5;
+        color: #000; /* Changed to black for better visibility */
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        line-height: 1.6;
+        font-size: 16px; /* Base font size increased */
+    }
+
+    /* Hand-drawn box effect - Increased size */
+    .sketchy-box {
+        position: relative;
+        border: 3px solid #000; /* Made border thicker */
+        border-radius: 12px; /* Increased radius */
+        background-color: #e1dacd;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.25); /* Enhanced shadow */
+        transition: all 0.3s ease;
+        margin-bottom: 25px; /* Added margin for better spacing */
+    }
+    
+    .sketchy-box::before {
+        content: '';
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        right: -4px;
+        bottom: -4px;
+        z-index: -1;
+        border: 2px solid #000; /* Thicker border */
+        border-radius: 12px;
+        transform: rotate(-0.7deg);
+    }
+    
+    .sketchy-box::after {
+        content: '';
+        position: absolute;
+        top: 7px;
+        left: 7px;
+        right: -7px;
+        bottom: -7px;
+        z-index: -2;
+        border: 1px solid rgba(0,0,0,0.4); /* More visible */
+        border-radius: 14px;
+        transform: rotate(0.9deg);
+    }
+    
+    .sketchy-box:hover {
+        transform: translateY(-5px); /* More pronounced hover effect */
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.35);
+    }
+
+    .container {
+        max-width: 1400px; /* Increased max-width */
+        margin: 0 auto;
+        padding: 30px; /* More padding */
+    }
+
+    /* Playful, hand-drawn title - Larger and more visible */
+    .main-title {
+        font-family: 'Kalam', cursive;
+        font-size: 4rem; /* Increased size */
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        color: #000; /* Changed to black */
+        text-shadow: 3px 3px 0 #fff;
+        transform: rotate(-1deg);
+        animation: bobble 3s infinite;
+        font-weight: 700; /* Made bolder */
+    }
+    
+    @keyframes bobble {
+        0% { transform: rotate(-1deg); }
+        50% { transform: rotate(1deg); }
+        100% { transform: rotate(-1deg); }
+    }
+
+    .panel {
+        margin-bottom: 40px; /* More spacing */
+        padding: 25px; /* More internal padding */
+        overflow: hidden;
+        position: relative;
+        min-height: 300px; /* Minimum height for panels */
+    }
+    
+    .panel-left {
+        transform: rotate(-0.5deg);
+        margin-right: 20px;
+    }
+    
+    .panel-right {
+        transform: rotate(0.7deg);
+        margin-left: 20px;
+    }
+
+    .panel-header {
+        padding: 15px 20px;
+        margin: -25px -25px 25px -25px;
+        border-bottom: 3px solid #000; /* Thicker border */
+        display: flex;
+        align-items: center;
+        background-color: #d4cec2;
+        position: relative;
+    }
+    
+    .panel-header::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: repeating-linear-gradient(
+            to right,
+            #000,
+            #000 12px,
+            transparent 12px,
+            transparent 15px
+        );
+        opacity: 0.4;
+    }
+
+    .panel-header h2 {
+        margin: 0;
+        font-size: 2rem; /* Larger text */
+        font-family: 'Kalam', cursive;
+        font-weight: 700;
+        color: #000; /* Changed to black */
+    }
+
+    .panel-header .icon {
+        margin-right: 15px;
+        vertical-align: middle;
+        font-size: 28px; /* Larger icon */
+        animation: spin 8s linear infinite;
+        transform-origin: center;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(3deg); }
+        75% { transform: rotate(-3deg); }
+        100% { transform: rotate(0deg); }
+    }
+
+    .panel-body {
+        padding: 15px;
+        font-size: 1.1rem; /* Larger text */
+    }
+
+    /* Sketchy button - Larger and more visible */
+    .btn {
+        font-family: 'Architects Daughter', cursive;
+        background-color: #fff;
+        border: 3px solid #333; /* Thicker border */
+        border-radius: 10px;
+        padding: 12px 24px; /* More padding */
+        font-size: 1.2rem; /* Larger text */
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        margin: 8px;
+        overflow: hidden;
+        box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+        transform: rotate(-0.5deg);
+        color: #000; /* Ensure text is black */
+        font-weight: 600; /* Bolder text */
+    }
+    
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover::before {
+        left: 100%;
+    }
+
+    .btn:hover {
+        transform: translateY(-4px) rotate(-0.5deg);
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.35);
+    }
+
+    .btn:active {
+        transform: translateY(0) rotate(0);
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+    }
+
+    .btn .icon {
+        margin-right: 10px;
+        font-size: 22px; /* Larger icon */
+    }
+
+    .btn-blue {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+        border-color: #0d47a1;
+    }
+
+    .btn-blue:hover {
+        background-color: #bbdefb;
+    }
+
+    .btn-green {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+        border-color: #1b5e20;
+    }
+    
+    .btn-green:hover {
+        background-color: #c8e6c9;
+    }
+
+    .btn-red {
+        background-color: #ffebee;
+        color: #b71c1c;
+        border-color: #b71c1c;
+    }
+    
+    .btn-red:hover {
+        background-color: #ffcdd2;
+    }
+
+    /* Custom table with sketchy style - Improved visibility */
+    .sketchy-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 20px 0;
+        font-size: 1.2rem; /* Larger text */
+    }
+
+    .sketchy-table th, .sketchy-table td {
+        border: 2px solid #000; /* Thicker border */
+        padding: 12px 15px; /* More padding */
+        position: relative;
+    }
+    
+    .sketchy-table th {
+        background-color: #d4cec2;
+        font-family: 'Kalam', cursive;
+        font-weight: 700;
+        color: #000; /* Ensure text is black */
+    }
+    
+    .sketchy-table th:first-child {
+        border-top-left-radius: 10px;
+    }
+    
+    .sketchy-table th:last-child {
+        border-top-right-radius: 10px;
+    }
+    
+    .sketchy-table tr:last-child td:first-child {
+        border-bottom-left-radius: 10px;
+    }
+    
+    .sketchy-table tr:last-child td:last-child {
+        border-bottom-right-radius: 10px;
+    }
+    
+    .sketchy-table tr:nth-child(even) {
+        background-color: #eae3d9;
+    }
+    
+    .sketchy-table tr:nth-child(odd) {
+        background-color: #f2ece5;
+    }
+    
+    .sketchy-table tr:hover {
+        background-color: #f0e9e0;
+    }
+
+    /* Playful form elements - Improved visibility */
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem; /* Larger text */
+        color: #000; /* Ensure text is black */
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 10px;
+        background-color: #fff;
+        font-family: 'Architects Daughter', cursive;
+        font-size: 1.2rem; /* Larger text */
+        transition: all 0.3s ease;
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .form-input:focus {
+        outline: none;
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.25);
+        transform: translateY(-3px);
+    }
+
+    .two-column-layout {
+        display: flex;
+        gap: 40px; /* More spacing */
+    }
+
+    .two-column-layout > div {
+        flex: 1;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #e9e3da;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 25px;
+        font-size: 1.1rem; /* Larger text */
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+        color: #000; /* Ensure text is black */
+        font-weight: 600; /* Bolder text */
+    }
+    
+    .badge::after {
+        content: '✨';
+        position: absolute;
+        top: 50%;
+        left: -20px;
+        transform: translateY(-50%);
+        font-size: 18px; /* Larger sparkle */
+        animation: sparkle 3s infinite;
+    }
+    
+    @keyframes sparkle {
+        0% { left: -20px; opacity: 0; }
+        10% { opacity: 0.8; }
+        50% { left: calc(100% + 20px); opacity: 0; }
+        100% { left: calc(100% + 20px); opacity: 0; }
+    }
+
+    /* Modal Styles - Increased size */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5); /* Darker overlay */
+    }
+
+    .modal-content {
+        background-color: #e1dacd;
+        margin: 5% auto;
+        padding: 30px; /* More padding */
+        border: 3px solid #000; /* Thicker border */
+        width: 85%;
+        max-width: 900px; /* Larger modal */
+        border-radius: 20px;
+        position: relative;
+        animation: modalDrop 0.5s ease;
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.25);
+    }
+    
+    @keyframes modalDrop {
+        0% { transform: translateY(-70px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+        padding-bottom: 20px;
+        border-bottom: 3px solid #000; /* Thicker border */
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .modal-header::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: repeating-linear-gradient(
+            to right,
+            #000,
+            #000 18px,
+            transparent 18px,
+            transparent 24px
+        );
+        opacity: 0.4;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 2.2rem; /* Larger text */
+        font-family: 'Kalam', cursive;
+        color: #000; /* Ensure text is black */
+        font-weight: 700; /* Bolder text */
+    }
+
+    .close {
+        position: absolute;
+        right: 25px;
+        top: 18px;
+        font-size: 32px; /* Larger close button */
+        font-weight: bold;
+        cursor: pointer;
+        color: #000; /* Black for visibility */
+        height: 45px;
+        width: 45px;
+        text-align: center;
+        line-height: 45px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .close:hover {
+        background-color: rgba(0,0,0,0.15);
+        transform: rotate(90deg);
+    }
+
+    /* Progress bar - Enhanced */
+    .progress-container {
+        margin: 25px 0;
+        padding: 25px;
+        background-color: #e9e3da;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 15px;
+        position: relative;
+    }
+    
+    .progress-container::before {
+        content: '';
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        right: -6px;
+        bottom: -6px;
+        z-index: -1;
+        border: 2px dashed rgba(0,0,0,0.4); /* More visible */
+        border-radius: 15px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        background-color: #d4cec2;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 30px;
+        height: 30px; /* Taller progress bar */
+        margin-top: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(45deg, #90caf9, #42a5f5, #90caf9);
+        background-size: 200% 200%;
+        animation: gradient 3s ease infinite;
+        width: 0%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000; /* Black for better visibility */
+        transition: width 0.5s ease;
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(255,255,255,0.7); /* Reversed text shadow */
+        font-size: 1.1rem; /* Larger progress text */
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Thumbnail grid - Larger */
+    .thumbnail-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px; /* More spacing */
+        margin-top: 25px;
+        perspective: 1000px;
+        justify-content: center; /* Center thumbnails */
+    }
+
+    .thumbnail {
+        width: 90px; /* Larger thumbnails */
+        height: 90px;
+        object-fit: cover;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 10px;
+        box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+        transition: all 0.3s ease;
+        transform: rotate(0deg);
+    }
+
+    .thumbnail.captured {
+        border-color: #1b5e20;
+        transform: rotate(-3deg);
+    }
+
+    .thumbnail.uploaded {
+        border-color: #0d47a1;
+        transform: rotate(3deg);
+    }
+    
+    .thumbnail:hover {
+        transform: scale(1.15) rotate(0deg);
+        z-index: 10;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.35);
+    }
+
+    .thumbnail-placeholder {
+        width: 90px; /* Larger placeholder */
+        height: 90px;
+        background-color: #d4cec2;
+        border: 3px dashed #000; /* Thicker border */
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem; /* Larger text */
+        color: #000; /* Black for visibility */
+        transition: all 0.3s ease;
+        position: relative;
+        transform: rotate(0deg);
+        font-weight: bold;
+    }
+    
+    .thumbnail-placeholder:nth-child(odd) {
+        transform: rotate(-3deg);
+    }
+    
+    .thumbnail-placeholder:nth-child(even) {
+        transform: rotate(3deg);
+    }
+    
+    .thumbnail-placeholder:hover {
+        background-color: #e9e3da;
+        transform: scale(1.05) rotate(0deg);
+    }
+
+    /* Animation for refresh icon */
+    @keyframes spin-bounce {
+        0% { transform: rotate(0deg); }
+        80% { transform: rotate(360deg); }
+        90% { transform: rotate(370deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .refresh-icon {
+        display: inline-block;
+        animation: spin-bounce 2s ease-in-out infinite;
+        margin-left: 15px;
+    }
+    
+    /* Custom checkbox for camera selection - Enhanced */
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+    }
+    
+    .checkbox-label {
+        margin-left: 15px;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem; /* Larger text */
+        color: #000; /* Ensure text is black */
+    }
+    
+    .custom-checkbox {
+        width: 30px; /* Larger checkbox */
+        height: 30px;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 8px;
+        position: relative;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.2s;
+    }
+    
+    .custom-checkbox::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 20px; /* Larger checkmark */
+        color: #000; /* Black for visibility */
+        transition: all 0.2s;
+    }
+    
+    .custom-checkbox.checked {
+        background: #bbdefb;
+    }
+    
+    .custom-checkbox.checked::after {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    /* Video container with sketchy border - Enhanced */
+    .video-container {
+        position: relative;
+        border: 3px solid #000; /* Thicker border */
+        border-radius: 15px;
+        padding: 15px;
+        background: #f5f5f5;
+        margin: 25px 0;
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.25);
+        overflow: hidden;
+    }
+    
+    .video-container::before {
+        content: '📸';
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 30px; /* Larger icon */
+        z-index: 10;
+        filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
+    }
+    
+    .video-label {
+        position: absolute;
+        bottom: 15px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        background: rgba(0,0,0,0.7); /* Darker label */
+        color: #fff;
+        padding: 8px;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem; /* Larger text */
+        transform: rotate(-1deg);
+    }
+    
+    .countdown {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8rem; /* Larger countdown */
+        color: #fff;
+        text-shadow: 4px 4px 0 #000;
+        opacity: 0;
+        z-index: 100;
+        font-family: 'Kalam', cursive;
+    }
+    
+    .countdown.active {
+        animation: countdownAnim 1s forwards;
+    }
+    
+    @keyframes countdownAnim {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    }
+    
+    /* Animated smile icon - Enhanced */
+    .smile-icon {
+        display: inline-block;
+        font-size: 2rem; /* Larger icon */
+        margin-left: 8px;
+        animation: smile-bounce 2s infinite;
+    }
+    
+    @keyframes smile-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+    
+    /* Handwritten notes on the UI - Enhanced */
+    .note {
+        position: absolute;
+        font-family: 'Indie Flower', cursive;
+        color: #000; /* Black for visibility */
+        transform: rotate(-5deg);
+        font-size: 1.1rem; /* Larger text */
+        pointer-events: none;
+        line-height: 1.3;
+        font-weight: bold;
+        background-color: rgba(255, 255, 100, 0.5); /* Yellow sticky note effect */
+        padding: 8px 15px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        max-width: 200px;
+        z-index: 10;
+    }
+    
+    .note-arrow {
+        position: absolute;
+        width: 50px; /* Larger arrow */
+        height: 50px;
+        border-top: 4px solid #000; /* Thicker border */
+        border-right: 4px solid #000;
+        opacity: 0.8;
+    }
+    
+    .note-top-right {
+        top: 60px;
+        right: 40px;
+    }
+    
+    .note-bottom-left {
+        bottom: 40px;
+        left: 50px;
+    }
+    
+    /* Fun message banner that appears occasionally - Enhanced */
+    .fun-message {
+        position: fixed;
+        bottom: -70px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 30px;
+        font-family: 'Kalam', cursive;
+        box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        z-index: 1000;
+        opacity: 0;
+        transition: all 0.5s ease;
+        font-size: 1.2rem; /* Larger text */
+        border: 2px solid #fff; /* Added border */
+    }
+    
+    .fun-message.show {
+        bottom: 30px;
+        opacity: 1;
+    }
+    
+    /* Navbar - Enhanced */
+    .navbar {
+        padding: 15px 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 3px solid #000; /* Thicker border */
+        background-color: #e1dacd;
+        position: relative;
+    }
+    
+    .navbar::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background-color: rgba(0,0,0,0.15);
+        border-bottom: 2px solid #000;
+    }
+
+    .logo {
+        height: 70px; /* Made logo even bigger */
+        transition: all 0.3s ease;
+        margin: 5px 0; /* Added margin to prevent layout issues */
+    }
+    
+    .logo:hover {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    /* Added loading animation for camera initiation */
+    .camera-loading {
+        text-align: center;
+        margin: 20px 0;
+        font-family: 'Kalam', cursive;
+        font-size: 1.3rem;
+        color: #000;
+    }
+    
+    .camera-loading-dots {
+        display: inline-block;
+    }
+    
+    .camera-loading-dots::after {
+        content: '.';
+        animation: loading-dots 1.5s infinite;
+    }
+    
+    @keyframes loading-dots {
+        0% { content: '.'; }
+        33% { content: '..'; }
+        66% { content: '...'; }
+        100% { content: '.'; }
+    }
+    
+    /* Added pulsing effect to the "Smile for Attendance" button */
+    @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+    }
+    
+    .btn-pulse {
+        animation: pulse-border 2s infinite;
+    }
+    
+    /* Added smile guide overlay for video */
+    .smile-guide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0.4;
+        z-index: 5;
+    }
+    
+    .smile-guide svg {
+        width: 70%;
+        height: 70%;
+        stroke: #000;
+        stroke-width: 2;
+        stroke-dasharray: 10;
+        fill: none;
+        animation: dash-animation 20s linear infinite;
+    }
+    
+    @keyframes dash-animation {
+        to {
+            stroke-dashoffset: 1000;
+        }
+    }
+    
+    /* Empty state styles - when no data is present */
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        background-color: #f2ece5;
+        border: 3px dashed #000;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    .empty-state-text {
+        font-family: 'Kalam', cursive;
+        font-size: 1.3rem;
+        color: #000;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive - Enhanced for better mobile experience */
+    @media (max-width: 768px) {
+        .two-column-layout {
+            flex-direction: column;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+            padding: 20px;
+        }
+        
+        .main-title {
+            font-size: 2.5rem;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            font-size: 1rem;
+            margin: 5px;
+        }
+        
+        .panel-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .sketchy-table {
+            font-size: 1rem;
+        }
+        
+        .sketchy-table th, .sketchy-table td {
+            padding: 8px;
+        }
+        
+        .thumbnail, .thumbnail-placeholder {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .countdown {
+            font-size: 5rem;
+        }
+    }
+  </style>
+<body>
+{% extends 'navbar_logout.html' %}
+{% block adminpage %}
+
+<div class="container">
+    <h1 class="main-title">Say Cheese! <span style="font-size: 0.8em;">Attendance Made Fun <span class="smile-icon">😊</span></span></h1>
+
+    {% if mess %}
+    <div style="text-align: center; margin-bottom: 25px;">
+        <p style="color: #721c24; background-color: #ffebee; border: 3px solid #000; padding: 15px; display: inline-block; border-radius: 15px; box-shadow: 4px 4px 0 rgba(0,0,0,0.25); font-size: 1.2rem;">{{ mess }}</p>
+    </div>
+    {% endif %}
+
+    <div class="two-column-layout">
+        <!-- Attendance Section -->
+        <div>
+            <div class="sketchy-box panel panel-left">
+                <div class="panel-header">
+                    <i class="material-icons icon">assignment</i>
+                    <h2>Today's Roll Call</h2>
+                </div>
+                <div class="panel-body">
+                    <a href="/start" style="text-decoration: none;">
+                        <button class="btn btn-blue btn-pulse">
+                            <i class="material-icons" style="font-size: 22px; margin-right: 8px;">camera_alt</i>
+                            Smile for Attendance!
+                        </button>
+                    </a>
+                    
+                    <div id="attendance-table-container" style="margin-top: 25px;">
+                        {% if l and l > 0 %}
+                        <table class="sketchy-table">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Time</th>
+                            </tr>
+                            {% for i in range(l) %}
+                            <tr>
+                                <td>{{ i+1 }}</td>
+                                <td>{{ names[i] }}</td>
+                                <td>{{ rolls[i] }}</td>
+                                <td>{{ times[i] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <div class="empty-state-text">No attendance records yet for today!</div>
+                            <div>Click "Smile for Attendance" to get started</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div>
+            <div class="sketchy-box panel panel-right">
+                <div class="panel-header">
+                    <i class="material-icons icon">people</i>
+                    <h2>User Directory</h2>
+                </div>
+                <div class="panel-body">
+                    <button id="openModalBtn" class="btn btn-blue" style="margin-right: 15px;">
+                        <i class="material-icons" style="font-size: 22px; margin-right: 8px;">person_add</i>
+                        Add New Face
+                    </button>
+                    <button id="openManageUsersBtn" class="btn">
+                        <i class="material-icons" style="font-size: 22px; margin-right: 8px;">manage_accounts</i>
+                        Manage Users
+                    </button>
+                    
+                    <div style="margin-top: 25px; text-align: center;">
+                        <span class="badge">Total Smiles Captured: {{totalreg}}</span>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Registration Modal -->
+<div id="registrationModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">face</i> Say Cheese for the Camera!</h2>
+            <span class="close">&times;</span>
+        </div>
+        
+        <div id="user-info-form" style="margin-bottom: 25px;">
+            <div class="form-group">
+                <label class="form-label">What's your name?</label>
+                <input type="text" id="newusername" name="newusername" class="form-input" required placeholder="Enter your name here...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Your ID number?</label>
+                <input type="text" id="newuserid" name="newuserid" class="form-input" required placeholder="Enter your ID number...">
+            </div>
+            <button id="initiate-registration" class="btn btn-blue">Get Ready to Smile!</button>
+        </div>
+
+        <div id="registration-methods" style="display: none;">
+            <div class="progress-container sketchy-box">
+                <h3 style="margin-top: 0; font-size: 1.6rem; color: #000;">Smile Progress</h3>
+                <p id="total-progress" style="font-weight: 700; font-size: 1.2rem; color: #000;">Faces: <span id="total-images">0</span>/10</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill">0%</div>
+                </div>
+                <p style="font-style: italic; font-size: 1.1rem; color: #000;">Mix and match camera captures and uploads to get 10 awesome shots!</p>
+                <div class="thumbnail-container" id="image-thumbnails">
+                    <!-- Thumbnails will be added here dynamically -->
+                    <div class="thumbnail-placeholder">1</div>
+                    <div class="thumbnail-placeholder">2</div>
+                    <div class="thumbnail-placeholder">3</div>
+                    <div class="thumbnail-placeholder">4</div>
+                    <div class="thumbnail-placeholder">5</div>
+                    <div class="thumbnail-placeholder">6</div>
+                    <div class="thumbnail-placeholder">7</div>
+                    <div class="thumbnail-placeholder">8</div>
+                    <div class="thumbnail-placeholder">9</div>
+                    <div class="thumbnail-placeholder">10</div>
+                </div>
+            </div>
+
+            <div class="two-column-layout" style="margin-top: 30px;">
+                <!-- Camera Capture Section -->
+                <div>
+                    <h3 style="font-size: 1.5rem; color: #000;"><i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">camera_alt</i> Capture Your Best Smile</h3>
+                    <div class="video-container">
+                        <video id="user-video" width="100%" height="250" autoplay muted style="border-radius: 8px;"></video>
+                        <div class="video-label">Get ready to smile! 📸</div>
+                        <div id="countdown" class="countdown">3</div>
+                        <div class="smile-guide">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" />
+                                <ellipse cx="50" cy="50" rx="30" ry="20" />
+                                <path d="M35,45 C 40,35 60,35 65,45" />
+                            </svg>
+                        </div>
+                    </div>
+                    <button id="start-camera" class="btn btn-blue" style="margin-right: 8px;">
+                        <i class="material-icons">videocam</i> Start Camera
+                    </button>
+                    <button id="capture-btn" class="btn" disabled>
+                        <i class="material-icons">photo_camera</i> Cheese!
+                    </button>
+                    <button id="stop-camera" class="btn" disabled style="margin-top: 8px;">
+                        <i class="material-icons">videocam_off</i> Stop Camera
+                    </button>
+                    
+                    <div class="camera-loading" id="camera-loading" style="display: none;">
+                        Starting camera<span class="camera-loading-dots"></span>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div>
+                    <h3 style="font-size: 1.5rem; color: #000;"><i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">file_upload</i> Upload Your Photos</h3>
+                    <div style="border: 3px dashed #000; border-radius: 15px; padding: 25px; background-color: #e9e3da;">
+                        <p style="margin-top: 0; font-size: 1.2rem; color: #000;">Have selfies ready? Upload them here:</p>
+                        <input type="file" id="file-input" accept="image/*" multiple style="margin-bottom: 20px; font-size: 1.1rem;">
+                        <button id="upload-btn" class="btn btn-blue">
+                            <i class="material-icons">cloud_upload</i> Upload Photos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button id="complete-registration" class="btn btn-green" disabled style="font-size: 1.3rem; padding: 15px 30px;">
+                    <i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i>
+                    All Done - Save My Smiles!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Users Modal -->
+<div id="manageUsersModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">people</i> Friend Directory</h2>
+            <span class="close manage-users-close">&times;</span>
+        </div>
+        
+        <div id="user-list-container">
+            <div style="text-align: center; margin: 30px 0;">
+                <i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i>
+                <p style="font-size: 1.3rem; color: #000;">Loading all the smiling faces...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content sketchy-box" style="max-width: 500px;">
+        <div class="modal-header" style="border-bottom-color: #721c24;">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px; color: #721c24;">warning</i> Are You Sure?</h2>
+            <span class="close confirm-close">&times;</span>
+        </div>
+        
+        <div style="margin: 25px 0; text-align: center;">
+            <p id="confirm-message" style="font-size: 1.3rem; margin-bottom: 30px; color: #000;">Do you really want to remove this friend?</p>
+            <input type="hidden" id="delete-user-id" value="">
+            <input type="hidden" id="delete-user-name" value="">
+            
+            <div>
+                <button id="confirm-cancel" class="btn" style="margin-right: 20px;">Nevermind</button>
+                <button id="confirm-delete" class="btn btn-red">Yes, Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fun-message" id="fun-message">Taking attendance has never been this fun! 🎉</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    // Modal handling
+    const regModal = document.getElementById("registrationModal");
+    const regModalBtn = document.getElementById("openModalBtn");
+    const regCloseBtn = document.getElementsByClassName("close")[0];
+    
+    const manageModal = document.getElementById("manageUsersModal");
+    const manageModalBtn = document.getElementById("openManageUsersBtn");
+    const manageCloseBtn = document.getElementsByClassName("manage-users-close")[0];
+    
+    const confirmModal = document.getElementById("confirmModal");
+    const confirmCloseBtn = document.getElementsByClassName("confirm-close")[0];
+    
+    const funMessage = document.getElementById("fun-message");
+    const countdown = document.getElementById("countdown");
+    const cameraLoading = document.getElementById("camera-loading");
+    
+    // Fun messages that appear randomly
+    const funMessages = [
+        "Taking attendance has never been this fun! 🎉",
+        "Smile! You're on candid camera! 📸",
+        "Your face is your password! 😊",
+        "No more taking roll calls the boring way!",
+        "Cheese! That's a perfect smile! 📸",
+        "Attendance tracking just got cooler! ✨",
+        "Your face is registered for success! 🌟",
+        "Who needs a sign-in sheet when you have your smile? 😁",
+        "Face recognition beats remembering passwords! 🔑",
+        "A smile a day keeps the absence away! 😄"
+    ];
+    
+    // Smile encouragement messages
+    const smileEncouragements = [
+        "Give us your biggest smile! 😁",
+        "Say CHEESE! 🧀",
+        "Show those pearly whites! ✨",
+        "Smile like you mean it! 😊",
+        "That's a perfect angle! 📐",
+        "Looking good! Keep smiling! 🌟",
+        "Awesome smile! 😎",
+        "Picture perfect! 🖼️",
+        "Your smile brightens the room! ☀️",
+        "That's a camera-ready smile! 📸"
+    ];
+    
+    // Show a random fun message occasionally
+    function showRandomMessage() {
+        if (Math.random() > 0.7) {
+            const randomMessage = funMessages[Math.floor(Math.random() * funMessages.length)];
+            funMessage.textContent = randomMessage;
+            funMessage.classList.add("show");
+            
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 3000);
+        }
+    }
+    
+    // Show a random smile encouragement when camera is started
+    function showSmileEncouragement() {
+        const randomMessage = smileEncouragements[Math.floor(Math.random() * smileEncouragements.length)];
+        funMessage.textContent = randomMessage;
+        funMessage.classList.add("show");
+        
+        setTimeout(() => {
+            funMessage.classList.remove("show");
+        }, 3000);
+    }
+    
+    // Call this function periodically
+    setInterval(showRandomMessage, 10000);
+    
+    // Show message on page load
+    setTimeout(showRandomMessage, 2000);
+    
+    // Registration process variables
+    let registrationInitiated = false;
+    let userId = null;
+    let userName = null;
+    let imageCount = 0;
+    const requiredImages = 10;
+    let uploadedFiles = [];
+    
+    // Camera variables
+    let stream = null;
+    
+    // Registration modal controls
+    regModalBtn.onclick = function() {
+        regModal.style.display = "block";
+    }
+    
+    regCloseBtn.onclick = function() {
+        if (confirm("Are you sure you want to cancel? Your smile progress will be lost!")) {
+            regModal.style.display = "none";
+            stopCamera();
+            resetRegistration();
+        }
+    }
+    
+    // Manage users modal controls
+    manageModalBtn.onclick = function() {
+        manageModal.style.display = "block";
+        loadUserList();
+    }
+    
+    manageCloseBtn.onclick = function() {
+        manageModal.style.display = "none";
+    }
+    
+    // Confirm modal controls
+    confirmCloseBtn.onclick = function() {
+        confirmModal.style.display = "none";
+    }
+    
+    document.getElementById("confirm-cancel").onclick = function() {
+        confirmModal.style.display = "none";
+    }
+    
+    document.getElementById("confirm-delete").onclick = function() {
+        const userId = document.getElementById("delete-user-id").value;
+        const userName = document.getElementById("delete-user-name").value;
+        
+        if (userId && userName) {
+            deleteUser(userId, userName);
+        }
+        
+        confirmModal.style.display = "none";
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == regModal) {
+            if (confirm("Are you sure you want to cancel? Your smile progress will be lost!")) {
+                regModal.style.display = "none";
+                stopCamera();
+                resetRegistration();
+            }
+        } else if (event.target == manageModal) {
+            manageModal.style.display = "none";
+        } else if (event.target == confirmModal) {
+            confirmModal.style.display = "none";
+        }
+    }
+    
+    // Load user list for management
+    function loadUserList() {
+        const container = document.getElementById("user-list-container");
+        
+        fetch("/get_all_users")
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const users = data.users;
+                    
+                    if (users.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">👥</div>
+                                <div class="empty-state-text">No smiling faces registered yet. Let's add some!</div>
+                                <button id="add-first-user" class="btn btn-blue">
+                                    <i class="material-icons" style="font-size: 22px; margin-right: 8px;">person_add</i>
+                                    Add Your First Face
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Add event listener to the new button
+                        document.getElementById("add-first-user").addEventListener("click", function() {
+                            manageModal.style.display = "none";
+                            regModal.style.display = "block";
+                        });
+                        
+                        return;
+                    }
+                    
+                    let html = `
+                        <table class="sketchy-table">
+                            <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                    `;
+                    
+                    users.forEach(user => {
+                        html += `
+                            <tr>
+                                <td>${user.name}</td>
+                                <td>${user.user_id}</td>
+                                <td>${user.registration_date}</td>
+                                <td>
+                                    <button class="btn btn-red delete-user-btn" 
+                                            data-user-id="${user.user_id}" 
+                                            data-user-name="${user.name}"
+                                            style="padding: 8px 12px; font-size: 1rem;">
+                                        <i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">delete</i>
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `</table>`;
+                    container.innerHTML = html;
+                    
+                    // Add event listeners to delete buttons
+                    const deleteButtons = document.getElementsByClassName("delete-user-btn");
+                    for (let i = 0; i < deleteButtons.length; i++) {
+                        deleteButtons[i].addEventListener("click", function() {
+                            const userId = this.getAttribute("data-user-id");
+                            const userName = this.getAttribute("data-user-name");
+                            openConfirmDialog(userId, userName);
+                        });
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <div class="empty-state-text">Error loading users: ${data.message}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error("Error loading users:", error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-text">Error loading users. Please try again.</div>
+                    </div>
+                `;
+            });
+    }
+    
+    // Open confirmation dialog for user deletion
+    function openConfirmDialog(userId, userName) {
+        document.getElementById("delete-user-id").value = userId;
+        document.getElementById("delete-user-name").value = userName;
+        document.getElementById("confirm-message").textContent = `Are you sure you want to remove ${userName} (ID: ${userId})?`;
+        confirmModal.style.display = "block";
+    }
+    
+    // Delete user
+    function deleteUser(userId, userName) {
+        fetch("/delete_user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                user_name: userName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show a fun success message
+                funMessage.textContent = `${userName} has been removed successfully! 👋`;
+                funMessage.classList.add("show");
+                setTimeout(() => {
+                    funMessage.classList.remove("show");
+                }, 3000);
+                
+                loadUserList(); // Refresh the user list
+            } else {
+                alert(`Error removing user: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error removing user. Please try again.");
+        });
+    }
+    
+    // Registration initiation
+    document.getElementById("initiate-registration").addEventListener("click", function() {
+        const username = document.getElementById("newusername").value.trim();
+        const userid = document.getElementById("newuserid").value.trim();
+        
+        if (!username || !userid) {
+            alert("Please enter both your name and ID");
+            return;
+        }
+        
+        // Send registration request to server
+        fetch("/register_user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username: username,
+                userid: userid
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Store user info and show registration methods
+                userId = userid;
+                userName = username;
+                registrationInitiated = true;
+                document.getElementById("registration-methods").style.display = "block";
+                document.getElementById("user-info-form").style.display = "none";
+                
+                // Show a fun message
+                funMessage.textContent = `Time to capture your best smiles, ${username}! 📸`;
+                funMessage.classList.add("show");
+                setTimeout(() => {
+                    funMessage.classList.remove("show");
+                }, 3000);
+                
+                // Disable the input fields
+                document.getElementById("newusername").disabled = true;
+                document.getElementById("newuserid").disabled = true;
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error starting registration");
+        });
+    });
+    
+    // Camera controls with countdown animation
+    document.getElementById("start-camera").addEventListener("click", startCamera);
+    document.getElementById("capture-btn").addEventListener("click", startCountdown);
+    document.getElementById("stop-camera").addEventListener("click", stopCamera);
+    
+    function startCamera() {
+        // Show loading indicator
+        document.getElementById("start-camera").disabled = true;
+        cameraLoading.style.display = "block";
+        
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    stream = mediaStream;
+                    const videoElement = document.getElementById("user-video");
+                    videoElement.srcObject = mediaStream;
+                    videoElement.play();
+                    
+                    document.getElementById("capture-btn").disabled = false;
+                    document.getElementById("stop-camera").disabled = false;
+                    
+                    // Hide loading indicator
+                    cameraLoading.style.display = "none";
+                    
+                    // Show a random smile encouragement
+                    showSmileEncouragement();
+                })
+                .catch(function(err) {
+                    console.log("Error accessing camera: " + err);
+                    alert("Could not access the camera. Please make sure you have granted camera permissions.");
+                    
+                    // Hide loading indicator and re-enable start button
+                    cameraLoading.style.display = "none";
+                    document.getElementById("start-camera").disabled = false;
+                });
+        } else {
+            alert("Your browser does not support camera access.");
+            cameraLoading.style.display = "none";
+            document.getElementById("start-camera").disabled = false;
+        }
+    }
+    
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            const videoElement = document.getElementById("user-video");
+            videoElement.srcObject = null;
+            document.getElementById("start-camera").disabled = false;
+            document.getElementById("capture-btn").disabled = true;
+            document.getElementById("stop-camera").disabled = true;
+        }
+    }
+    
+    // Add countdown animation before capturing
+    function startCountdown() {
+        if (!registrationInitiated || imageCount >= requiredImages) {
+            return;
+        }
+        
+        document.getElementById("capture-btn").disabled = true;
+        let count = 3;
+        countdown.textContent = count;
+        countdown.classList.add("active");
+        
+        // Show a random encouragement
+        const encouragements = [
+            "Big smile in 3...", 
+            "Get ready to smile!", 
+            "Say cheese in 3...",
+            "Perfect smile coming up!",
+            "Show those teeth!"
+        ];
+        const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+        funMessage.textContent = randomEncouragement;
+        funMessage.classList.add("show");
+        
+        const countInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdown.classList.remove("active");
+                setTimeout(() => {
+                    countdown.textContent = count;
+                    countdown.classList.add("active");
+                }, 50);
+            } else {
+                clearInterval(countInterval);
+                countdown.textContent = "Cheese!";
+                setTimeout(() => {
+                    countdown.classList.remove("active");
+                    funMessage.classList.remove("show");
+                    captureImage();
+                }, 1000);
+            }
+        }, 1000);
+    }
+    
+    function captureImage() {
+        const videoElement = document.getElementById("user-video");
+        const canvas = document.createElement("canvas");
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob
+        canvas.toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append("face_image", blob, "face.jpg");
+            formData.append("username", userName);
+            formData.append("userid", userId);
+            formData.append("image_count", imageCount);
+            formData.append("source", "camera");
+            
+            fetch("/capture_image", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Create thumbnail from the captured image
+                    const thumbnail = document.createElement("img");
+                    thumbnail.src = URL.createObjectURL(blob);
+                    thumbnail.classList.add("thumbnail", "captured");
+                    updateThumbnail(imageCount, thumbnail);
+                    
+                    imageCount++;
+                    updateProgress();
+                    
+                    // Enable the capture button again
+                    document.getElementById("capture-btn").disabled = false;
+                    
+                    // Show a random encouraging message
+                    const messages = [
+                        "Great smile! 😊",
+                        "Perfect shot! 📸",
+                        "You look amazing! ✨",
+                        "What a charming smile! 😁",
+                        "Awesome! Keep going! 🌟",
+                        "Looking good! 🤩",
+                        "That's a keeper! 👍",
+                        "Beautiful smile! 💫",
+                        "Fantastic! Just a few more! ⭐",
+                        "Say cheese! 🧀"
+                    ];
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    funMessage.textContent = randomMessage;
+                    funMessage.classList.add("show");
+                    setTimeout(() => {
+                        funMessage.classList.remove("show");
+                    }, 2000);
+                } else {
+                    console.error("Error saving image:", data.message);
+                    alert("Error: " + data.message);
+                    document.getElementById("capture-btn").disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error uploading captured image");
+                document.getElementById("capture-btn").disabled = false;
+            });
+        }, "image/jpeg");
+    }
+    
+    // File upload handling with animations
+    document.getElementById("upload-btn").addEventListener("click", uploadFiles);
+    
+    function uploadFiles() {
+        const fileInput = document.getElementById("file-input");
+        const files = fileInput.files;
+        
+        if (!registrationInitiated) {
+            alert("Please enter your name and ID first!");
+            return;
+        }
+        
+        if (files.length === 0) {
+            alert("Please select some photos to upload");
+            return;
+        }
+        
+        // Determine how many more images we can accept
+        const remainingSlots = requiredImages - imageCount;
+        const filesToProcess = Math.min(remainingSlots, files.length);
+        
+        if (filesToProcess === 0) {
+            alert("You've already reached the maximum number of photos!");
+            return;
+        }
+        
+        // Disable the upload button during processing
+        document.getElementById("upload-btn").disabled = true;
+        
+        // Show a processing message
+        funMessage.textContent = `Processing ${filesToProcess} photos... 🔄`;
+        funMessage.classList.add("show");
+        
+        // Process each file
+        let processedCount = 0;
+        
+        for (let i = 0; i < filesToProcess; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append("face_image", file);
+            formData.append("username", userName);
+            formData.append("userid", userId);
+            formData.append("image_count", imageCount + i);
+            formData.append("source", "upload");
+            
+            fetch("/capture_image", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                processedCount++;
+                
+                if (data.success) {
+                    // Create thumbnail
+                    const thumbnail = document.createElement("img");
+                    thumbnail.src = URL.createObjectURL(file);
+                    thumbnail.classList.add("thumbnail", "uploaded");
+                    updateThumbnail(imageCount, thumbnail);
+                    
+                    imageCount++;
+                    updateProgress();
+                } else {
+                    console.error("Error processing image:", data.message);
+                }
+                
+                // Re-enable upload button when all files are processed
+                if (processedCount === filesToProcess) {
+                    document.getElementById("upload-btn").disabled = false;
+                    fileInput.value = ''; // Clear the file input
+                    
+                    // Update message
+                    funMessage.textContent = `Uploaded ${processedCount} photos successfully! ✅`;
+                    setTimeout(() => {
+                        funMessage.classList.remove("show");
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                processedCount++;
+                
+                // Re-enable upload button when all files are processed
+                if (processedCount === filesToProcess) {
+                    document.getElementById("upload-btn").disabled = false;
+                    
+                    // Update message
+                    funMessage.textContent = "There was an error processing some photos 😕";
+                    setTimeout(() => {
+                        funMessage.classList.remove("show");
+                    }, 2000);
+                }
+            });
+        }
+    }
+    
+    // Update UI functions with animations
+    function updateProgress() {
+        const totalImagesEl = document.getElementById("total-images");
+        const progressFill = document.getElementById("progress-fill");
+        
+        totalImagesEl.textContent = imageCount;
+        const percentage = (imageCount / requiredImages) * 100;
+        progressFill.style.width = percentage + "%";
+        progressFill.textContent = Math.round(percentage) + "%";
+        
+        // Enable or disable complete button
+        document.getElementById("complete-registration").disabled = imageCount < requiredImages;
+        
+        // Show encouraging messages based on progress
+        if (imageCount === 5) {
+            funMessage.textContent = "Halfway there! 5 more to go! 🎉";
+            funMessage.classList.add("show");
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 2000);
+        } else if (imageCount === 9) {
+            funMessage.textContent = "Just one more photo to go! 🎯";
+            funMessage.classList.add("show");
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 2000);
+        } else if (imageCount === requiredImages) {
+            funMessage.textContent = "All done! Click 'Save My Smiles' below! 🎊";
+            funMessage.classList.add("show");
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 2000);
+        }
+    }
+    
+    function updateThumbnail(index, thumbnail) {
+        const thumbnailContainer = document.getElementById("image-thumbnails");
+        const placeholders = thumbnailContainer.getElementsByClassName("thumbnail-placeholder");
+        
+        if (index < placeholders.length) {
+            thumbnailContainer.replaceChild(thumbnail, placeholders[0]);
+        }
+    }
+    
+    // Complete registration with animation
+    document.getElementById("complete-registration").addEventListener("click", function() {
+        if (imageCount < requiredImages) {
+            alert(`Please provide all ${requiredImages} images before completing`);
+            return;
+        }
+        
+        // Disable button and show loading animation
+        const completeBtn = document.getElementById("complete-registration");
+        completeBtn.disabled = true;
+        completeBtn.innerHTML = '<i class="material-icons refresh-icon" style="font-size: 24px;">refresh</i> Saving...';
+        
+        fetch("/complete_registration", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username: userName,
+                userid: userId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success animation
+                completeBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> Success!';
+                completeBtn.style.backgroundColor = "#4caf50";
+                completeBtn.style.color = "white";
+                
+                // Show success message
+                funMessage.textContent = "Registration complete! Your face is now in our system! 🎉";
+                funMessage.classList.add("show");
+                
+                setTimeout(() => {
+                    regModal.style.display = "none";
+                    stopCamera();
+                    resetRegistration();
+                    // Refresh the page to show updated user count
+                    window.location.reload();
+                }, 2000);
+            } else {
+                completeBtn.disabled = false;
+                completeBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+                alert("Error completing registration: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            completeBtn.disabled = false;
+            completeBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+            alert("Error completing registration");
+        });
+    });
+    
+    function resetRegistration() {
+        // Reset all registration variables
+        registrationInitiated = false;
+        userId = null;
+        userName = null;
+        imageCount = 0;
+        uploadedFiles = [];
+        
+        // Reset UI
+        document.getElementById("registration-methods").style.display = "none";
+        document.getElementById("user-info-form").style.display = "block";
+        document.getElementById("newusername").disabled = false;
+        document.getElementById("newuserid").disabled = false;
+        document.getElementById("newusername").value = "";
+        document.getElementById("newuserid").value = "";
+        document.getElementById("file-input").value = "";
+        
+        // Reset progress
+        document.getElementById("total-images").textContent = "0";
+        document.getElementById("progress-fill").style.width = "0%";
+        document.getElementById("progress-fill").textContent = "0%";
+        
+        // Reset complete button
+        const completeBtn = document.getElementById("complete-registration");
+        completeBtn.disabled = true;
+        completeBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+        completeBtn.style.backgroundColor = "";
+        completeBtn.style.color = "";
+        
+        // Reset thumbnails
+        const thumbnailContainer = document.getElementById("image-thumbnails");
+        thumbnailContainer.innerHTML = "";
+        for (let i = 0; i < requiredImages; i++) {
+            const placeholder = document.createElement("div");
+            placeholder.className = "thumbnail-placeholder";
+            placeholder.textContent = i + 1;
+            thumbnailContainer.appendChild(placeholder);
+        }
+    }
+
+    // Auto-refresh attendance table every 5 seconds when in attendance taking mode
+    let isAttendanceMode = false;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('attendance_mode') === 'true') {
+        isAttendanceMode = true;
+        refreshAttendance();
+        
+        // Show a fun message
+        setTimeout(() => {
+            funMessage.textContent = "Attendance mode active! Smile for the camera! 📸";
+            funMessage.classList.add("show");
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 3000);
+        }, 1000);
+    }
+
+    function refreshAttendance() {
+        if (!isAttendanceMode) return;
+        
+        fetch('/get_attendance')
+            .then(response => response.json())
+            .then(data => {
+                // Update the attendance table
+                updateAttendanceTable(data);
+                // Schedule next refresh
+                setTimeout(refreshAttendance, 5000);
+            })
+            .catch(error => {
+                console.error("Error refreshing attendance:", error);
+                // Try again even if there was an error
+                setTimeout(refreshAttendance, 5000);
+            });
+    }
+
+    function updateAttendanceTable(data) {
+        const tableContainer = document.getElementById('attendance-table-container');
+        
+        if (data.length === 0) {
+            tableContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <div class="empty-state-text">No attendance records yet for today!</div>
+                    <div>Click "Smile for Attendance" to get started</div>
+                </div>
+            `;
+            return;
+        }
+        
+        let tableHtml = `
+            <table class="sketchy-table">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Time</th>
+                </tr>
+        `;
+        
+        data.forEach((item, index) => {
+            tableHtml += `
+                <tr>
+                    <td>${index+1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.roll}</td>
+                    <td>${item.time}</td>
+                </tr>
+            `;
+        });
+        
+        // Show a random message when new attendance is detected
+        if (data.length > document.querySelectorAll("#attendance-table-container tr").length - 1) {
+            funMessage.textContent = "New attendance detected! Someone just smiled! 📸";
+            funMessage.classList.add("show");
+            setTimeout(() => {
+                funMessage.classList.remove("show");
+            }, 2000);
+        }
+        
+        tableHtml += '</table>';
+        tableContainer.innerHTML = tableHtml;
+    }
+    
+    // Add some fun interaction on page load
+    window.addEventListener('load', function() {
+        // Add some random rotation to elements for a sketchy feel
+        document.querySelectorAll('.sketchy-box').forEach(box => {
+            const randomRotation = (Math.random() * 2 - 1) * 0.8; // Random between -0.8 and 0.8 degrees
+            box.style.transform = `rotate(${randomRotation}deg)`;
+        });
+        
+        // Animate in the title
+        setTimeout(() => {
+            document.querySelector('.main-title').style.opacity = '1';
+        }, 300);
+        
+        // Pulse animation for attendance button
+        const attendanceBtn = document.querySelector('.btn-pulse');
+        if (attendanceBtn) {
+            setInterval(() => {
+                attendanceBtn.classList.remove('btn-pulse');
+                setTimeout(() => {
+                    attendanceBtn.classList.add('btn-pulse');
+                }, 100);
+            }, 4000);
+        }
+    });
+</script>
+
+{% endblock %}
+</body>
+</html>

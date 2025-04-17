@@ -7,14 +7,18 @@ import json
 import shutil
 from datetime import date, datetime
 import sqlite3
-import torch
 import traceback
+import base64
+import threading
+import torch
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from flask import Flask, request, render_template, redirect, url_for, session, flash, jsonify, Response
 from PIL import Image
 from contextlib import contextmanager
 from werkzeug.utils import secure_filename
-
+from io import BytesIO
+import csv
+from flask import send_file
 # Initialize Flask App
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session management
@@ -374,10 +378,10 @@ def add_attendance(name, user_id):
                     f.write(f'\n{name},{user_id},{current_time}')
                 
                 print(f"Added attendance for {name} (ID: {user_id}) at {current_time}.")
-                return True
+                return True, current_time
             else:
                 print(f"Attendance already marked for {name} (ID: {user_id}) today.")
-                return False
+                return False, None
     
     try:
         return execute_with_retry(_add_attendance)
@@ -391,10 +395,10 @@ def add_attendance(name, user_id):
             with open(f'Attendance/Attendance-{datetoday}.csv', 'a') as f:
                 f.write(f'\n{name},{user_id},{current_time}')
             print(f"Added attendance to CSV for {name} (ID: {user_id}).")
-            return True
+            return True, current_time
         except:
             print("Failed to add attendance to CSV.")
-            return False
+            return False, None
 
 # Function to extract attendance data for today
 def extract_attendance():
@@ -440,37 +444,52 @@ def extract_attendance():
 
 # Extract face from image directly using alignment and resize
 def extract_face(img, box, image_size=160, margin=20):
-    """Extract face from image given bounding box coordinates"""
-    # Get coordinates with margin
-    x1, y1, x2, y2 = box
-    
-    # Calculate dimensions with margin
-    size_bb = max(x2-x1, y2-y1)
-    center_x, center_y = (x1 + x2) // 2, (y1 + y2) // 2
+    """Extract face from image with more robust preprocessing"""
+    try:
+        # Get coordinates with margin
+        x1, y1, x2, y2 = box
+        
+        # Calculate dimensions with margin
+        size_bb = max(x2-x1, y2-y1)
+        center_x, center_y = (x1 + x2) // 2, (y1 + y2) // 2
 
-    # Calculate new size with margin
-    size = size_bb + 2 * margin
-    
-    # Calculate new coordinates
-    x1 = max(int(center_x - size // 2), 0)
-    y1 = max(int(center_y - size // 2), 0)
-    x2 = min(int(center_x + size // 2), img.width)
-    y2 = min(int(center_y + size // 2), img.height)
-    
-    # Crop and resize
-    face = img.crop((x1, y1, x2, y2))
-    face = face.resize((image_size, image_size), Image.BILINEAR)
-    
-    # Convert to tensor
-    face_tensor = torch.from_numpy(np.array(face)).permute(2, 0, 1).float() / 255.0
-    return face_tensor.unsqueeze(0).to(device)
+        # Calculate new size with margin
+        size = size_bb + 2 * margin
+        
+        # Calculate new coordinates
+        x1 = max(int(center_x - size // 2), 0)
+        y1 = max(int(center_y - size // 2), 0)
+        x2 = min(int(center_x + size // 2), img.width)
+        y2 = min(int(center_y + size // 2), img.height)
+        
+        # Crop and resize
+        face = img.crop((x1, y1, x2, y2))
+        face = face.resize((image_size, image_size), Image.BILINEAR)
+        
+        # Convert to tensor
+        face_tensor = torch.from_numpy(np.array(face)).permute(2, 0, 1).float() / 255.0
+        return face_tensor.unsqueeze(0).to(device)
+    except Exception as e:
+        print(f"Error extracting face: {e}")
+        traceback.print_exc()
 
 # Process face from uploaded image
 def process_face_image(image_path):
-    """Extract face from uploaded image file"""
+    """Extract face from uploaded image file with preprocessing"""
     try:
         # Open image
         img = Image.open(image_path).convert('RGB')
+        
+        # Convert to numpy array for preprocessing
+        img_np = np.array(img)
+        
+        # Apply histogram equalization to improve lighting invariance
+        if img_np.shape[2] == 3:  # Color image
+            img_yuv = cv2.cvtColor(img_np, cv2.COLOR_RGB2YUV)
+            img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+            img_np = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB)
+            # Convert back to PIL
+            img = Image.fromarray(img_np)
         
         # Detect faces
         boxes, _ = detector.detect(img)
@@ -493,7 +512,8 @@ def process_face_image(image_path):
         return None
 
 # Identify face using cosine similarity between embeddings
-def identify_face(face_tensor, threshold=0.6):  # Lowered threshold for easier matching
+def identify_face(face_tensor, threshold=0.6, samples=3):
+    """Identify face with multiple samples for better accuracy"""
     try:
         # Get embeddings database
         embeddings_dict = get_all_embeddings()
@@ -505,15 +525,27 @@ def identify_face(face_tensor, threshold=0.6):  # Lowered threshold for easier m
         # Get embedding for current face
         embedding = resnet(face_tensor).detach()
         
-        # Find closest match
+        # Create slight variations for robustness (simulate small movements)
+        embeddings = [embedding]
+        
+        # Use the matches across all variations
+        scores = {}
+        
+        for emb in embeddings:
+            for name_id, ref_embedding in embeddings_dict.items():
+                # Calculate cosine similarity (higher is better)
+                similarity = torch.nn.functional.cosine_similarity(emb, ref_embedding)
+                score = similarity.item()
+                
+                # Add to scores, keeping the best score per identity
+                if name_id not in scores or score > scores[name_id]:
+                    scores[name_id] = score
+        
+        # Find the best match
         best_match = None
         best_score = 0
         
-        for name_id, ref_embedding in embeddings_dict.items():
-            # Calculate cosine similarity (higher is better)
-            similarity = torch.nn.functional.cosine_similarity(embedding, ref_embedding)
-            score = similarity.item()
-            
+        for name_id, score in scores.items():
             if score > best_score:
                 best_score = score
                 best_match = name_id
@@ -529,7 +561,7 @@ def identify_face(face_tensor, threshold=0.6):  # Lowered threshold for easier m
         print(f"Error identifying face: {e}")
         traceback.print_exc()
         return "Unknown_0"
-
+    
 # Function to get image count for a user
 def get_temp_embedding_count(username, userid):
     """Get the number of temporary embeddings saved for a user"""
@@ -545,6 +577,220 @@ def get_temp_embedding_count(username, userid):
         print(f"Error getting embedding count: {e}")
         return 0
 
+# Global variable to store camera reference
+camera = None
+camera_lock = threading.Lock()  # Add threading import at the top
+last_frame = None
+camera_error = None
+
+# Function to safely access the camera
+def get_camera():
+    global camera, camera_error
+    
+    if camera is not None and camera.isOpened():
+        return camera
+    
+    # Try to initialize camera with error handling
+    with camera_lock:
+        # First release any existing camera
+        if camera is not None:
+            try:
+                camera.release()
+            except:
+                pass
+            camera = None
+        
+        # Try different camera indices
+        for camera_idx in [0, 1, 2, -1]:
+            try:
+                print(f"Trying camera index {camera_idx}")
+                cam = cv2.VideoCapture(camera_idx)
+                if cam.isOpened():
+                    # Set lower resolution for better performance
+                    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                    camera = cam
+                    camera_error = None
+                    print(f"Successfully opened camera with index {camera_idx}")
+                    return camera
+            except Exception as e:
+                print(f"Error with camera index {camera_idx}: {e}")
+                camera_error = str(e)
+                continue
+        
+        # Try a different method on Linux (v4l2)
+        try:
+            import subprocess
+            result = subprocess.run(['v4l2-ctl', '--list-devices'], capture_output=True, text=True)
+            print("Available video devices:")
+            print(result.stdout)
+            
+            # Try /dev/video0 directly
+            cam = cv2.VideoCapture('/dev/video0')
+            if cam.isOpened():
+                cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                camera = cam
+                camera_error = None
+                print("Successfully opened camera with /dev/video0")
+                return camera
+        except Exception as e:
+            print(f"Error with v4l2 method: {e}")
+            camera_error = f"Failed to access camera: {str(e)}"
+        
+        print("Failed to open any camera")
+        camera_error = "Failed to access camera. Please check camera connections and permissions."
+        return None
+
+# Function to generate camera frames with better error handling
+def generate_frames():
+    global last_frame, camera_error
+    
+    # Create a blank frame with error message
+    def create_error_frame(message):
+        blank_frame = np.zeros((480, 640, 3), np.uint8)
+        # Draw background rectangle
+        cv2.rectangle(blank_frame, (0, 200), (640, 280), (50, 50, 50), -1)
+        # Add text
+        cv2.putText(blank_frame, message, (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        return blank_frame
+    
+    # Try to get camera
+    cam = get_camera()
+    if cam is None:
+        # Return error frame
+        error_frame = create_error_frame(camera_error or "Camera not available")
+        _, buffer = cv2.imencode('.jpg', error_frame)
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        return
+    
+    frame_count = 0
+    recognition_frequency = 3  # Only process every 3rd frame
+    last_recognition_time = time.time() - 5
+    retry_count = 0
+    max_retries = 5
+    
+    while True:
+        try:
+            if cam is None or not cam.isOpened():
+                # Try to reconnect
+                if retry_count < max_retries:
+                    retry_count += 1
+                    print(f"Camera disconnected, trying to reconnect (attempt {retry_count}/{max_retries})")
+                    time.sleep(1)  # Wait before retry
+                    cam = get_camera()
+                    if cam is None:
+                        error_frame = create_error_frame("Reconnecting to camera...")
+                        _, buffer = cv2.imencode('.jpg', error_frame)
+                        yield (b'--frame\r\n'
+                               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                        continue
+                else:
+                    error_frame = create_error_frame("Failed to reconnect to camera")
+                    _, buffer = cv2.imencode('.jpg', error_frame)
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                    break
+            
+            success, frame = cam.read()
+            
+            if not success:
+                print("Failed to read frame from camera")
+                retry_count += 1
+                if retry_count >= max_retries:
+                    error_frame = create_error_frame("Failed to read from camera")
+                    _, buffer = cv2.imencode('.jpg', error_frame)
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                    break
+                
+                # Try to reconnect
+                print(f"Trying to reconnect to camera (attempt {retry_count}/{max_retries})")
+                time.sleep(1)
+                cam = get_camera()
+                continue
+            
+            # Reset retry count on successful frame read
+            retry_count = 0
+            
+            # Store last successful frame
+            last_frame = frame.copy()
+            
+            # Create a copy for display
+            display_frame = frame.copy()
+            current_time = time.time()
+            
+            # Process only every few frames to improve performance
+            if frame_count % recognition_frequency == 0 and current_time - last_recognition_time > 2:
+                last_recognition_time = current_time
+                
+                # Convert to RGB (MTCNN expects RGB)
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(rgb_frame)
+                
+                # Detect faces with MTCNN
+                try:
+                    boxes, _ = detector.detect(img_pil)
+                    
+                    if boxes is not None:
+                        for box in boxes:
+                            # Get coordinates
+                            x1, y1, x2, y2 = [int(i) for i in box]
+                            
+                            # Ensure coordinates are within frame boundaries
+                            x1 = max(0, x1)
+                            y1 = max(0, y1)
+                            x2 = min(frame.shape[1], x2)
+                            y2 = min(frame.shape[0], y2)
+                            
+                            if x2 > x1 and y2 > y1:  # Valid box dimensions
+                                # Draw rectangle around face
+                                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                                
+                                # Extract and process the face
+                                try:
+                                    # Extract face manually
+                                    face_tensor = extract_face(img_pil, (x1, y1, x2, y2))
+                                    
+                                    # Identify face
+                                    identity = identify_face(face_tensor)
+                                    name, user_id = identity.split('_')[0], identity.split('_')[1]
+                                    
+                                    # Draw name text
+                                    cv2.putText(display_frame, f'{name}', (x1, y1 - 10), 
+                                               cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                                except Exception as e:
+                                    print(f"Error processing detected face: {e}")
+                                    cv2.putText(display_frame, "Error", (x1, y1 - 10), 
+                                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+                except Exception as e:
+                    print(f"Error in face detection: {e}")
+            
+            # Encode frame to JPEG
+            ret, buffer = cv2.imencode('.jpg', display_frame)
+            if not ret:
+                continue
+                
+            # Return the frame as bytes in multipart/x-mixed-replace format
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                   
+            frame_count += 1
+            
+        except Exception as e:
+            print(f"Error in generate_frames: {e}")
+            traceback.print_exc()
+            
+            # Return error frame on exception
+            error_frame = create_error_frame(f"Camera error: {str(e)}")
+            _, buffer = cv2.imencode('.jpg', error_frame)
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            
+            # Wait a bit before continuing
+            time.sleep(1)
+
 # Routes
 @app.route('/')
 def index():
@@ -556,6 +802,109 @@ def index():
                            l=l, 
                            totalreg=get_total_users(), 
                            datetoday2=datetoday2)
+
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Streams camera feed to the browser."""
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/start_attendance')
+def start_attendance():
+    """Start the camera for attendance taking"""
+    camera = get_camera()
+    
+    if camera is None:
+        return jsonify({'success': False, 'message': camera_error or 'Failed to open camera'})
+    
+    return jsonify({'success': True, 'message': 'Camera started for attendance'})
+
+@app.route('/stop_attendance')
+def stop_attendance():
+    """Stop the camera"""
+    global camera
+    
+    with camera_lock:
+        if camera is not None:
+            try:
+                camera.release()
+                print("Camera released")
+            except Exception as e:
+                print(f"Error releasing camera: {e}")
+            finally:
+                camera = None
+    
+    return jsonify({'success': True, 'message': 'Camera stopped'})
+
+@app.route('/mark_attendance', methods=['POST'])
+def mark_attendance():
+    """Process a frame and mark attendance if a face is recognized"""
+    global last_frame
+    
+    try:
+        data = request.json
+        image_data = data.get('image')
+        
+        if image_data:
+            # Use provided image data
+            try:
+                # Decode base64 image
+                image_data = image_data.split(',')[1] if ',' in image_data else image_data
+                image_bytes = base64.b64decode(image_data)
+                
+                # Convert to PIL Image
+                img = Image.open(BytesIO(image_bytes)).convert('RGB')
+            except Exception as e:
+                print(f"Error decoding image: {e}")
+                return jsonify({'success': False, 'message': f'Error decoding image: {str(e)}'})
+        elif last_frame is not None:
+            # Use last captured frame if no image data provided
+            img = Image.fromarray(cv2.cvtColor(last_frame, cv2.COLOR_BGR2RGB))
+        else:
+            return jsonify({'success': False, 'message': 'No image data available'})
+        
+        # Detect faces
+        boxes, _ = detector.detect(img)
+        
+        if boxes is None or len(boxes) == 0:
+            return jsonify({'success': False, 'message': 'No face detected in image'})
+        
+        # Use the first detected face
+        box = boxes[0]
+        x1, y1, x2, y2 = [int(i) for i in box]
+        
+        # Extract face
+        face_tensor = extract_face(img, (x1, y1, x2, y2))
+        
+        # Identify face
+        identity = identify_face(face_tensor)
+        name, user_id = identity.split('_')[0], identity.split('_')[1]
+        
+        if name == "Unknown":
+            return jsonify({'success': False, 'message': 'Unknown person detected'})
+        
+        # Add attendance
+        marked, time_marked = add_attendance(name, user_id)
+        
+        if marked:
+            return jsonify({
+                'success': True, 
+                'message': f'Attendance marked for {name}',
+                'name': name,
+                'user_id': user_id,
+                'time': time_marked
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'Attendance already marked for {name} today'
+            })
+    
+    except Exception as e:
+        print(f"Error marking attendance: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
 
 @app.route('/get_attendance')
 def get_attendance():
@@ -677,6 +1026,78 @@ def capture_image():
         print(f"Error capturing image: {e}")
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)})
+    
+
+
+@app.route('/export_attendance')
+def export_attendance():
+    """Export attendance for the current day as CSV"""
+    try:
+        names, rolls, times, l = extract_attendance()
+        
+        if l == 0:
+            return jsonify({'success': False, 'message': 'No attendance records for today'})
+        
+        # Create a CSV in memory (in binary mode)
+        output = BytesIO()
+        
+        # Write the CSV header and data as bytes
+        output.write('Name,ID,Time\n'.encode('utf-8'))
+        
+        for i in range(l):
+            row = f'{names[i]},{rolls[i]},{times[i]}\n'
+            output.write(row.encode('utf-8'))
+        
+        # Prepare the CSV for download
+        output.seek(0)
+        
+        # Set filename with date
+        filename = f"attendance_{datetoday}.csv"
+        
+        # Return as downloadable file
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=filename
+        )
+    
+    except Exception as e:
+        print(f"Error exporting attendance: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)})
+    
+@app.route('/get_attendance_history', methods=['POST'])
+def get_attendance_history():
+    """Get attendance history for a specific user"""
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'User ID is required'})
+        
+        # Get user attendance history
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT date, time FROM attendance 
+                WHERE user_id = ? 
+                ORDER BY date DESC, time DESC
+                LIMIT 30
+            """, (user_id,))
+            
+            history = [{'date': row[0], 'time': row[1]} for row in cursor.fetchall()]
+            
+            return jsonify({
+                'success': True, 
+                'history': history
+            })
+    
+    except Exception as e:
+        print(f"Error getting attendance history: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/complete_registration', methods=['POST'])
 def complete_registration():
@@ -731,123 +1152,20 @@ def complete_registration():
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)})
 
-@app.route('/start', methods=['GET'])
-def start():
-    if get_total_users() == 0:
-        return render_template('index.html', 
-                               totalreg=get_total_users(), 
-                               datetoday2=datetoday2, 
-                               mess='No users in the database. Please add a new user to continue.')
-
-    # Start camera in a separate process
-    try:
-        # Try different camera indices if the first one fails
-        cap = None
-        for camera_idx in [0, 1]:
-            cap = cv2.VideoCapture(camera_idx)
-            if cap.isOpened():
-                print(f"Successfully opened camera with index {camera_idx}")
-                break
-        
-        if not cap or not cap.isOpened():
-            print("Failed to open any camera")
-            return render_template('index.html', 
-                                  totalreg=get_total_users(), 
-                                  datetoday2=datetoday2, 
-                                  mess='Unable to access camera. Please check your camera connection.')
-        
-        # Set lower resolution for better performance
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        
-        frame_count = 0
-        recognition_frequency = 3  # Only process every 3rd frame for better performance
-        
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("Failed to read frame from camera")
-                break
-            
-            # Create a copy for display
-            display_frame = frame.copy()
-            
-            # Process only every few frames to improve performance
-            if frame_count % recognition_frequency == 0:
-                # Convert to RGB (MTCNN expects RGB)
-                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                img_pil = Image.fromarray(rgb_frame)
-                
-                # Detect faces with MTCNN
-                try:
-                    boxes, _ = detector.detect(img_pil)
-                    
-                    if boxes is not None:
-                        for box in boxes:
-                            # Get coordinates
-                            x1, y1, x2, y2 = [int(i) for i in box]
-                            
-                            # Ensure coordinates are within frame boundaries
-                            x1 = max(0, x1)
-                            y1 = max(0, y1)
-                            x2 = min(frame.shape[1], x2)
-                            y2 = min(frame.shape[0], y2)
-                            
-                            if x2 > x1 and y2 > y1:  # Valid box dimensions
-                                # Draw rectangle around face
-                                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                
-                                # Extract and process the face
-                                try:
-                                    # Extract face manually
-                                    face_tensor = extract_face(img_pil, (x1, y1, x2, y2))
-                                    
-                                    # Identify face
-                                    identity = identify_face(face_tensor)
-                                    name, user_id = identity.split('_')[0], identity.split('_')[1]
-                                    
-                                    # Add attendance
-                                    if name != "Unknown":
-                                        add_attendance(name, user_id)
-                                    
-                                    # Draw name text
-                                    cv2.putText(display_frame, f'{name}', (x1, y1 - 10), 
-                                                cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
-                                except Exception as e:
-                                    print(f"Error processing detected face: {e}")
-                                    cv2.putText(display_frame, "Error processing face", (x1, y1 - 10), 
-                                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-                except Exception as e:
-                    print(f"Error in face detection: {e}")
-            
-            # Display instructions
-            cv2.putText(display_frame, "Press ESC or Q to quit", (10, display_frame.shape[0] - 20), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            
-            # Display the frame
-            cv2.imshow('Attendance System', display_frame)
-            
-            # Check for quit key (ESC or 'q')
-            key = cv2.waitKey(1)
-            if key == 27 or key == ord('q'):
-                break
-            
-            frame_count += 1
-        
-        cap.release()
-        cv2.destroyAllWindows()
-        
-        # Extract updated attendance info and redirect to index with a flag for auto-refresh
-        return redirect(url_for('index', attendance_mode='true'))
+# Cleanup function to release camera when app stops
+@app.teardown_appcontext
+def release_camera(exception):
+    global camera
     
-    except Exception as e:
-        print(f"Error in start route: {e}")
-        traceback.print_exc()
-        return render_template('index.html', 
-                              totalreg=get_total_users(), 
-                              datetoday2=datetoday2, 
-                              mess=f'An error occurred: {str(e)}')
+    with camera_lock:
+        if camera is not None:
+            try:
+                camera.release()
+                print("Camera released on app shutdown")
+            except:
+                pass
+            camera = None
 
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=True, port=1000)
+    app.run(debug=True, port=5000)

@@ -880,6 +880,71 @@
         margin-bottom: 20px;
     }
 
+    /* New styles for the embedded video stream */
+    .video-stream-container {
+        position: relative;
+        width: 320px;
+        height: 240px;
+        border: 3px solid #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.25);
+        margin: 10px auto 20px;
+    }
+    
+    .video-stream {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .video-stream-controls {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .video-stream-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: 'Kalam', cursive;
+        font-size: 1.4rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .video-stream-container:hover .video-stream-overlay {
+        opacity: 1;
+    }
+    
+    .recognized-user {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 8px;
+        text-align: center;
+        font-family: 'Kalam', cursive;
+        font-size: 1.1rem;
+        transform: translateY(100%);
+        transition: transform 0.3s;
+    }
+    
+    .recognized-user.show {
+        transform: translateY(0);
+    }
+
     /* Responsive - Enhanced for better mobile experience */
     @media (max-width: 768px) {
         .two-column-layout {
@@ -922,6 +987,11 @@
         .countdown {
             font-size: 5rem;
         }
+        
+        .video-stream-container {
+            width: 280px;
+            height: 210px;
+        }
     }
   </style>
 <body>
@@ -937,6 +1007,25 @@
     </div>
     {% endif %}
 
+    <!-- Video Stream Container - New Element -->
+    <div id="video-stream-wrapper" style="text-align: center; display: none;">
+        <div class="video-stream-container">
+            <img id="video-stream" src="/video_feed" class="video-stream">
+            <div class="video-stream-overlay">Watching for smiles...</div>
+            <div id="recognized-user" class="recognized-user">Looking for faces...</div>
+        </div>
+        <div class="video-stream-controls">
+            <button id="start-attendance-btn" class="btn btn-blue">
+                <i class="material-icons" style="font-size: 22px; margin-right: 8px;">videocam</i>
+                Start Attendance Camera
+            </button>
+            <button id="stop-attendance-btn" class="btn btn-red" style="display: none;">
+                <i class="material-icons" style="font-size: 22px; margin-right: 8px;">videocam_off</i>
+                Stop Camera
+            </button>
+        </div>
+    </div>
+
     <div class="two-column-layout">
         <!-- Attendance Section -->
         <div>
@@ -946,12 +1035,10 @@
                     <h2>Today's Roll Call</h2>
                 </div>
                 <div class="panel-body">
-                    <a href="/start" style="text-decoration: none;">
-                        <button class="btn btn-blue btn-pulse">
-                            <i class="material-icons" style="font-size: 22px; margin-right: 8px;">camera_alt</i>
-                            Smile for Attendance!
-                        </button>
-                    </a>
+                    <button id="toggle-camera-btn" class="btn btn-blue btn-pulse">
+                        <i class="material-icons" style="font-size: 22px; margin-right: 8px;">camera_alt</i>
+                        Smile for Attendance!
+                    </button>
                     
                     <div id="attendance-table-container" style="margin-top: 25px;">
                         {% if l and l > 0 %}
@@ -979,6 +1066,20 @@
                         </div>
                         {% endif %}
                     </div>
+                    <!-- Add this button below the attendance table -->
+                    <button id="export-attendance-btn" class="btn btn-blue" style="margin-top: 15px;">
+                        <i class="material-icons" style="font-size: 22px; margin-right: 8px;">download</i>
+                        Export Attendance
+                    </button>
+
+                        <!-- Add this JavaScript to handle the export -->
+                        <script>
+                        // Add this with your other JavaScript code
+                        document.getElementById("export-attendance-btn").addEventListener("click", function() {
+                            // Redirect to export endpoint
+                            window.location.href = "/export_attendance";
+                        });
+                        </script>
                 </div>
             </div>
         </div>
@@ -1145,6 +1246,27 @@
     </div>
 </div>
 
+<div id="attendanceHistoryModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">history</i> Attendance History</h2>
+            <span class="close history-close">&times;</span>
+        </div>
+        
+        <div id="history-user-info" style="text-align: center; margin: 15px 0;">
+            <h3 id="history-user-name" style="font-size: 1.8rem; margin-bottom: 5px;"></h3>
+            <p id="history-user-id" style="font-size: 1.2rem; color: #666;"></p>
+        </div>
+        
+        <div id="history-container">
+            <div style="text-align: center; margin: 30px 0;">
+                <i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i>
+                <p style="font-size: 1.3rem; color: #000;">Loading attendance history...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="fun-message" id="fun-message">Taking attendance has never been this fun! 🎉</div>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -1157,6 +1279,9 @@
     const regModalBtn = document.getElementById("openModalBtn");
     const regCloseBtn = document.getElementsByClassName("close")[0];
     
+
+    const historyModal = document.getElementById("attendanceHistoryModal");
+    const historyCloseBtn = document.getElementsByClassName("history-close")[0];
     const manageModal = document.getElementById("manageUsersModal");
     const manageModalBtn = document.getElementById("openManageUsersBtn");
     const manageCloseBtn = document.getElementsByClassName("manage-users-close")[0];
@@ -1167,6 +1292,266 @@
     const funMessage = document.getElementById("fun-message");
     const countdown = document.getElementById("countdown");
     const cameraLoading = document.getElementById("camera-loading");
+    
+    // Video stream elements
+    const videoStreamWrapper = document.getElementById("video-stream-wrapper");
+    const toggleCameraBtn = document.getElementById("toggle-camera-btn");
+    const startAttendanceBtn = document.getElementById("start-attendance-btn");
+    const stopAttendanceBtn = document.getElementById("stop-attendance-btn");
+    const recognizedUser = document.getElementById("recognized-user");
+    const videoStream = document.getElementById("video-stream");
+    
+    // Video stream state
+    let isStreamActive = false;
+    let attendanceCheckInterval = null;
+    
+    // Function to toggle the video stream container visibility
+    toggleCameraBtn.addEventListener("click", function() {
+        if (videoStreamWrapper.style.display === "none" || videoStreamWrapper.style.display === "") {
+            videoStreamWrapper.style.display = "block";
+            toggleCameraBtn.innerHTML = '<i class="material-icons" style="font-size: 22px; margin-right: 8px;">visibility_off</i> Hide Camera';
+        } else {
+            videoStreamWrapper.style.display = "none";
+            toggleCameraBtn.innerHTML = '<i class="material-icons" style="font-size: 22px; margin-right: 8px;">camera_alt</i> Smile for Attendance!';
+            // Also stop the stream if it's running
+            if (isStreamActive) {
+                stopAttendanceStream();
+            }
+        }
+    });
+    
+    // Start attendance camera stream
+    startAttendanceBtn.addEventListener("click", function() {
+        startAttendanceStream();
+    });
+    historyCloseBtn.onclick = function() {
+        historyModal.style.display = "none";
+    }
+
+    // Stop attendance camera stream
+    stopAttendanceBtn.addEventListener("click", function() {
+        stopAttendanceStream();
+    });
+    
+    // Function to start the attendance stream
+    function startAttendanceStream() {
+        fetch('/start_attendance')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    isStreamActive = true;
+                    startAttendanceBtn.style.display = "none";
+                    stopAttendanceBtn.style.display = "inline-flex";
+                    
+                    // Show a fun message
+                    funMessage.textContent = "Camera ready! Smile to mark your attendance! 📸";
+                    funMessage.classList.add("show");
+                    setTimeout(() => {
+                        funMessage.classList.remove("show");
+                    }, 3000);
+                    
+                    // Start checking for attendance
+                    attendanceCheckInterval = setInterval(checkAttendance, 5000);
+                    
+                    // Force reload the video feed (in case it was stalled)
+                    videoStream.src = "/video_feed?" + new Date().getTime();
+                } else {
+                    alert("Failed to start camera: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error starting attendance:", error);
+                alert("Error starting camera");
+            });
+    }
+    function viewAttendanceHistory(userId, userName) {
+        // Set user info in the modal
+        document.getElementById("history-user-name").textContent = userName;
+        document.getElementById("history-user-id").textContent = `ID: ${userId}`;
+        
+        // Show the modal
+        historyModal.style.display = "block";
+        
+        // Load history
+        fetch("/get_attendance_history", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: userId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById("history-container");
+            
+            if (data.success) {
+                const history = data.history;
+                
+                if (history.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <div class="empty-state-text">No attendance records found for this user</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Group by date
+                const groupedHistory = {};
+                history.forEach(record => {
+                    if (!groupedHistory[record.date]) {
+                        groupedHistory[record.date] = [];
+                    }
+                    groupedHistory[record.date].push(record.time);
+                });
+                
+                let html = `<div class="sketchy-box" style="padding: 20px; margin-bottom: 30px;">`;
+                
+                for (const date in groupedHistory) {
+                    html += `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="font-size: 1.3rem; color: #000; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;">
+                                <i class="material-icons" style="vertical-align: middle; font-size: 20px; margin-right: 5px;">date_range</i>
+                                ${date}
+                            </h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-left: 20px;">
+                    `;
+                    
+                    groupedHistory[date].forEach(time => {
+                        html += `
+                            <div style="background-color: #e8f5e9; border: 2px solid #1b5e20; border-radius: 15px; padding: 5px 12px; display: inline-block;">
+                                <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px; color: #1b5e20;">schedule</i>
+                                ${time}
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-text">Error loading history: ${data.message}</div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            const container = document.getElementById("history-container");
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-text">Error loading history. Please try again.</div>
+                </div>
+            `;
+        });
+    }
+
+    // Function to stop the attendance stream
+    function stopAttendanceStream() {
+        fetch('/stop_attendance')
+            .then(response => response.json())
+            .then(data => {
+                isStreamActive = false;
+                startAttendanceBtn.style.display = "inline-flex";
+                stopAttendanceBtn.style.display = "none";
+                
+                // Clear the attendance check interval
+                if (attendanceCheckInterval) {
+                    clearInterval(attendanceCheckInterval);
+                    attendanceCheckInterval = null;
+                }
+                
+                // Reset the recognized user display
+                recognizedUser.textContent = "Camera stopped";
+                recognizedUser.classList.add("show");
+                setTimeout(() => {
+                    recognizedUser.classList.remove("show");
+                }, 3000);
+                
+                // Show a message
+                funMessage.textContent = "Camera stopped! Thanks for using Say Cheese! 👋";
+                funMessage.classList.add("show");
+                setTimeout(() => {
+                    funMessage.classList.remove("show");
+                }, 3000);
+            })
+            .catch(error => {
+                console.error("Error stopping attendance:", error);
+            });
+    }
+    
+    // Function to check and mark attendance
+    function checkAttendance() {
+        if (!isStreamActive) return;
+        
+        // Create a canvas to capture the current frame from the video stream
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw the current video frame to the canvas
+        ctx.drawImage(videoStream, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to base64 image data
+        const imageData = canvas.toDataURL('image/jpeg');
+        
+        // Send to server for processing
+        fetch('/mark_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: imageData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show recognized user
+                recognizedUser.textContent = `Hello, ${data.name}!`;
+                recognizedUser.classList.add("show");
+                
+                // Show notification
+                funMessage.textContent = `Attendance marked for ${data.name}! 🎉`;
+                funMessage.classList.add("show");
+                
+                setTimeout(() => {
+                    funMessage.classList.remove("show");
+                    // Only hide the recognized user text after a short delay
+                    setTimeout(() => {
+                        recognizedUser.classList.remove("show");
+                    }, 2000);
+                }, 3000);
+                
+                // Refresh attendance table
+                refreshAttendance();
+            } else if (data.message === "Unknown person detected") {
+                // Show unknown person
+                recognizedUser.textContent = "I don't recognize you! 🤔";
+                recognizedUser.classList.add("show");
+                setTimeout(() => {
+                    recognizedUser.classList.remove("show");
+                }, 2000);
+            }
+        })
+        .catch(error => {
+            console.error("Error marking attendance:", error);
+        });
+    }
     
     // Fun messages that appear randomly
     const funMessages = [
@@ -1342,6 +1727,13 @@
                                 <td>${user.user_id}</td>
                                 <td>${user.registration_date}</td>
                                 <td>
+                                    <button class="btn view-history-btn" 
+                                            data-user-id="${user.user_id}" 
+                                            data-user-name="${user.name}"
+                                            style="padding: 8px 12px; font-size: 1rem; margin-right: 8px; background-color: #e0f7fa; color: #006064; border-color: #006064;">
+                                        <i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">history</i>
+                                        History
+                                    </button>
                                     <button class="btn btn-red delete-user-btn" 
                                             data-user-id="${user.user_id}" 
                                             data-user-name="${user.name}"
@@ -1357,13 +1749,22 @@
                     html += `</table>`;
                     container.innerHTML = html;
                     
-                    // Add event listeners to delete buttons
+                    // Add event listeners to buttons
                     const deleteButtons = document.getElementsByClassName("delete-user-btn");
                     for (let i = 0; i < deleteButtons.length; i++) {
                         deleteButtons[i].addEventListener("click", function() {
                             const userId = this.getAttribute("data-user-id");
                             const userName = this.getAttribute("data-user-name");
                             openConfirmDialog(userId, userName);
+                        });
+                    }
+                    
+                    const historyButtons = document.getElementsByClassName("view-history-btn");
+                    for (let i = 0; i < historyButtons.length; i++) {
+                        historyButtons[i].addEventListener("click", function() {
+                            const userId = this.getAttribute("data-user-id");
+                            const userName = this.getAttribute("data-user-name");
+                            viewAttendanceHistory(userId, userName);
                         });
                     }
                 } else {
@@ -1879,38 +2280,16 @@
         }
     }
 
-    // Auto-refresh attendance table every 5 seconds when in attendance taking mode
-    let isAttendanceMode = false;
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('attendance_mode') === 'true') {
-        isAttendanceMode = true;
-        refreshAttendance();
-        
-        // Show a fun message
-        setTimeout(() => {
-            funMessage.textContent = "Attendance mode active! Smile for the camera! 📸";
-            funMessage.classList.add("show");
-            setTimeout(() => {
-                funMessage.classList.remove("show");
-            }, 3000);
-        }, 1000);
-    }
-
+    // Function to refresh attendance table
     function refreshAttendance() {
-        if (!isAttendanceMode) return;
-        
         fetch('/get_attendance')
             .then(response => response.json())
             .then(data => {
                 // Update the attendance table
                 updateAttendanceTable(data);
-                // Schedule next refresh
-                setTimeout(refreshAttendance, 5000);
             })
             .catch(error => {
                 console.error("Error refreshing attendance:", error);
-                // Try again even if there was an error
-                setTimeout(refreshAttendance, 5000);
             });
     }
 
@@ -1985,6 +2364,9 @@
                 }, 100);
             }, 4000);
         }
+        
+        // Set up auto-refresh for attendance
+        setInterval(refreshAttendance, 10000);
     });
 </script>
 

@@ -803,102 +803,83 @@ def index():
                            totalreg=get_total_users(), 
                            datetoday2=datetoday2)
 
-@app.route('/video_feed')
-def video_feed():
-    """Video streaming route. Streams camera feed to the browser."""
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/start_attendance')
 def start_attendance():
-    """Start the camera for attendance taking"""
-    camera = get_camera()
-    
-    if camera is None:
-        return jsonify({'success': False, 'message': camera_error or 'Failed to open camera'})
-    
-    return jsonify({'success': True, 'message': 'Camera started for attendance'})
+    """Now just a stub that returns success"""
+    return jsonify({'success': True, 'message': 'Client-side camera mode active'})
 
 @app.route('/stop_attendance')
 def stop_attendance():
-    """Stop the camera"""
-    global camera
-    
-    with camera_lock:
-        if camera is not None:
-            try:
-                camera.release()
-                print("Camera released")
-            except Exception as e:
-                print(f"Error releasing camera: {e}")
-            finally:
-                camera = None
-    
-    return jsonify({'success': True, 'message': 'Camera stopped'})
+    """Now just a stub that returns success"""
+    return jsonify({'success': True, 'message': 'Client-side camera mode stopped'})
 
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
-    """Process a frame and mark attendance if a face is recognized"""
-    global last_frame
-    
+    """Process a frame from client-side camera and mark attendance if a face is recognized"""
     try:
         data = request.json
         image_data = data.get('image')
         
-        if image_data:
-            # Use provided image data
-            try:
-                # Decode base64 image
-                image_data = image_data.split(',')[1] if ',' in image_data else image_data
-                image_bytes = base64.b64decode(image_data)
-                
-                # Convert to PIL Image
-                img = Image.open(BytesIO(image_bytes)).convert('RGB')
-            except Exception as e:
-                print(f"Error decoding image: {e}")
-                return jsonify({'success': False, 'message': f'Error decoding image: {str(e)}'})
-        elif last_frame is not None:
-            # Use last captured frame if no image data provided
-            img = Image.fromarray(cv2.cvtColor(last_frame, cv2.COLOR_BGR2RGB))
-        else:
-            return jsonify({'success': False, 'message': 'No image data available'})
+        if not image_data:
+            return jsonify({'success': False, 'message': 'No image data provided'})
+        
+        try:
+            # Decode base64 image
+            image_data = image_data.split(',')[1] if ',' in image_data else image_data
+            image_bytes = base64.b64decode(image_data)
+            
+            # Convert to PIL Image
+            img = Image.open(BytesIO(image_bytes)).convert('RGB')
+            
+            # Add some debugging output (optional)
+            print(f"Received image of size: {img.width}x{img.height}")
+        except Exception as e:
+            print(f"Error decoding image: {e}")
+            traceback.print_exc()
+            return jsonify({'success': False, 'message': f'Error decoding image: {str(e)}'})
         
         # Detect faces
-        boxes, _ = detector.detect(img)
-        
-        if boxes is None or len(boxes) == 0:
-            return jsonify({'success': False, 'message': 'No face detected in image'})
-        
-        # Use the first detected face
-        box = boxes[0]
-        x1, y1, x2, y2 = [int(i) for i in box]
-        
-        # Extract face
-        face_tensor = extract_face(img, (x1, y1, x2, y2))
-        
-        # Identify face
-        identity = identify_face(face_tensor)
-        name, user_id = identity.split('_')[0], identity.split('_')[1]
-        
-        if name == "Unknown":
-            return jsonify({'success': False, 'message': 'Unknown person detected'})
-        
-        # Add attendance
-        marked, time_marked = add_attendance(name, user_id)
-        
-        if marked:
-            return jsonify({
-                'success': True, 
-                'message': f'Attendance marked for {name}',
-                'name': name,
-                'user_id': user_id,
-                'time': time_marked
-            })
-        else:
-            return jsonify({
-                'success': False, 
-                'message': f'Attendance already marked for {name} today'
-            })
+        try:
+            boxes, _ = detector.detect(img)
+            
+            if boxes is None or len(boxes) == 0:
+                return jsonify({'success': False, 'message': 'No face detected in image'})
+            
+            # Use the first detected face
+            box = boxes[0]
+            x1, y1, x2, y2 = [int(i) for i in box]
+            
+            # Extract face
+            face_tensor = extract_face(img, (x1, y1, x2, y2))
+            
+            # Identify face
+            identity = identify_face(face_tensor)
+            name, user_id = identity.split('_')[0], identity.split('_')[1]
+            
+            if name == "Unknown":
+                return jsonify({'success': False, 'message': 'Unknown person detected'})
+            
+            # Add attendance
+            marked, time_marked = add_attendance(name, user_id)
+            
+            if marked:
+                return jsonify({
+                    'success': True, 
+                    'message': f'Attendance marked for {name}',
+                    'name': name,
+                    'user_id': user_id,
+                    'time': time_marked
+                })
+            else:
+                return jsonify({
+                    'success': False, 
+                    'message': f'Attendance already marked for {name} today'
+                })
+        except Exception as e:
+            print(f"Error in face detection/recognition: {e}")
+            traceback.print_exc()
+            return jsonify({'success': False, 'message': f'Error in processing: {str(e)}'})
     
     except Exception as e:
         print(f"Error marking attendance: {e}")

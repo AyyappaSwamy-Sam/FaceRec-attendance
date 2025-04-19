@@ -1148,5 +1148,6 @@ def release_camera(exception):
             camera = None
 
 # Run the Flask app
+# Run the Flask app
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

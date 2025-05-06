@@ -19,13 +19,21 @@ from werkzeug.utils import secure_filename
 from io import BytesIO
 import csv
 from flask import send_file
+import pytz
+from datetime import datetime # Ensure datetime is imported from datetime
 # Initialize Flask App
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session management
 
-# Date formats
-datetoday = date.today().strftime("%m_%d_%y")
-datetoday2 = date.today().strftime("%d-%B-%Y")
+try:
+    ist = pytz.timezone('Asia/Kolkata')
+except pytz.exceptions.UnknownTimeZoneError:
+    print("Error: Timezone 'Asia/Kolkata' not found. Ensure pytz is installed correctly.")
+    ist = pytz.utc # Fallback to UTC if IST is not found
+
+now_ist = datetime.now(ist)
+datetoday = now_ist.strftime("%m_%d_%y")
+datetoday2 = now_ist.strftime("%d-%B-%Y")
 
 # Create required directories
 os.makedirs('Attendance', exist_ok=True)
@@ -200,7 +208,8 @@ def add_user_to_db(name, user_id):
     def _add_user():
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            registration_date = date.today().strftime("%Y-%m-%d")
+            # Use IST for registration_date
+            registration_date = datetime.now(ist).strftime("%Y-%m-%d")
             
             # Check if user ID already exists
             cursor.execute("SELECT COUNT(*) FROM users WHERE user_id = ?", (user_id,))
@@ -209,7 +218,7 @@ def add_user_to_db(name, user_id):
                 return False
             
             cursor.execute("INSERT INTO users (name, user_id, registration_date) VALUES (?, ?, ?)",
-                          (name, user_id, registration_date))
+                            (name, user_id, registration_date))
             print(f"Added user {name} with ID {user_id} to database.")
             return True
     
@@ -358,14 +367,18 @@ def add_attendance(name, user_id):
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            current_date = date.today().strftime("%Y-%m-%d")
-            current_time = datetime.now().strftime("%H:%M:%S")
+            # Use IST for current_date and current_time
+            current_time_obj = datetime.now(ist)
+            current_date = current_time_obj.strftime("%Y-%m-%d")
+            current_time = current_time_obj.strftime("%H:%M:%S")
             
             # Check if attendance already marked for today
+            # Ensure the date comparison is consistent if dates are stored/compared
+            # The current_date is already IST based.
             cursor.execute("""
                 SELECT id FROM attendance 
                 WHERE user_id = ? AND date = ?
-            """, (user_id, current_date))
+            """, (user_id, current_date)) # Make sure 'date' in DB is also based on consistent timezone logic
             
             if cursor.fetchone() is None:
                 cursor.execute("""
@@ -374,13 +387,19 @@ def add_attendance(name, user_id):
                 """, (user_id, name, current_date, current_time))
                 
                 # Also update CSV for backward compatibility
-                with open(f'Attendance/Attendance-{datetoday}.csv', 'a') as f:
-                    f.write(f'\n{name},{user_id},{current_time}')
+                # Ensure datetoday for CSV filename is also IST based (already done globally)
+                attendance_csv_path = f'Attendance/Attendance-{datetoday}.csv'
+                if not os.path.exists(attendance_csv_path):
+                    with open(attendance_csv_path, 'w') as f_csv:
+                        f_csv.write('Name,Roll,Time\n') # Add header if file is new
+
+                with open(attendance_csv_path, 'a') as f_csv:
+                    f_csv.write(f'{name},{user_id},{current_time}\n') # Write on new line
                 
-                print(f"Added attendance for {name} (ID: {user_id}) at {current_time}.")
+                print(f"Added attendance for {name} (ID: {user_id}) at {current_time} (IST).")
                 return True, current_time
             else:
-                print(f"Attendance already marked for {name} (ID: {user_id}) today.")
+                print(f"Attendance already marked for {name} (ID: {user_id}) today (IST).")
                 return False, None
     
     try:
@@ -793,15 +812,39 @@ def generate_frames():
 
 # Routes
 @app.route('/')
-def index():
+def home():
+    # Redirect to the attendance page by default
+    return redirect(url_for('attendance_page'))
+
+@app.route('/attendance')
+def attendance_page():
     names, rolls, times, l = extract_attendance()    
-    return render_template('index.html', 
-                           names=names, 
-                           rolls=rolls, 
-                           times=times, 
-                           l=l, 
-                           totalreg=get_total_users(), 
-                           datetoday2=datetoday2)
+    return render_template('attendance.html', 
+                            names=names, 
+                            rolls=rolls, 
+                            times=times, 
+                            l=l, 
+                            # totalreg=get_total_users(), # Not needed for this page directly
+                            datetoday2=datetoday2,
+                            mess=request.args.get('mess')) # For flash messages if any
+
+@app.route('/user-management')
+def user_management_page():
+    return render_template('user_management.html', 
+                            totalreg=get_total_users(), 
+                            datetoday2=datetoday2,
+                            mess=request.args.get('mess'))
+
+
+# def index():
+#     names, rolls, times, l = extract_attendance()    
+#     return render_template('index.html', 
+#                            names=names, 
+#                            rolls=rolls, 
+#                            times=times, 
+#                            l=l, 
+#                            totalreg=get_total_users(), 
+#                            datetoday2=datetoday2)
 
 
 @app.route('/start_attendance')
@@ -1150,4 +1193,4 @@ def release_camera(exception):
 # Run the Flask app
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, ssl_context=('/home/ayyappa/Documents/FaceRec-attendance/ssl/cert.pem', '/home/ayyappa/Documents/FaceRec-attendance/ssl/key.pem'))

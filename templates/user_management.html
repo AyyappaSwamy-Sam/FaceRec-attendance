@@ -1,0 +1,1927 @@
+{% extends 'navbar_logout.html' %}
+{% block adminpage %}
+<html lang="en">
+  <head>
+    <!-- Include the same head content as index.html: meta, title, style imports -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Say Cheese! - User Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+      /* PASTE THE ENTIRE <style> BLOCK FROM index.html HERE */
+      /* (Same style block as in attendance.html) */
+      @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap');
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Architects Daughter', cursive;
+        background-color: #faf9f5;
+        color: #000;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        line-height: 1.6;
+        font-size: 16px;
+    }
+
+    .sketchy-box {
+        position: relative;
+        border: 3px solid #000;
+        border-radius: 12px;
+        background-color: #e1dacd;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.25);
+        transition: all 0.3s ease;
+        margin-bottom: 25px;
+    }
+    
+    .sketchy-box::before {
+        content: '';
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        right: -4px;
+        bottom: -4px;
+        z-index: -1;
+        border: 2px solid #000;
+        border-radius: 12px;
+        transform: rotate(-0.7deg);
+    }
+    
+    .sketchy-box::after {
+        content: '';
+        position: absolute;
+        top: 7px;
+        left: 7px;
+        right: -7px;
+        bottom: -7px;
+        z-index: -2;
+        border: 1px solid rgba(0,0,0,0.4);
+        border-radius: 14px;
+        transform: rotate(0.9deg);
+    }
+    
+    .sketchy-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.35);
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+
+    .main-title {
+        font-family: 'Kalam', cursive;
+        font-size: 4rem;
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        color: #000;
+        text-shadow: 3px 3px 0 #fff;
+        transform: rotate(-1deg);
+        animation: bobble 3s infinite;
+        font-weight: 700;
+    }
+    
+    @keyframes bobble {
+        0% { transform: rotate(-1deg); }
+        50% { transform: rotate(1deg); }
+        100% { transform: rotate(-1deg); }
+    }
+
+    .panel {
+        margin-bottom: 40px;
+        padding: 25px;
+        overflow: hidden;
+        position: relative;
+        min-height: 300px;
+    }
+    
+    .panel-left {
+        transform: rotate(-0.5deg);
+        /* margin-right: 20px; */
+    }
+    
+    .panel-right {
+        transform: rotate(0.7deg);
+        /* margin-left: 20px; */
+    }
+
+    .panel-header {
+        padding: 15px 20px;
+        margin: -25px -25px 25px -25px;
+        border-bottom: 3px solid #000;
+        display: flex;
+        align-items: center;
+        background-color: #d4cec2;
+        position: relative;
+    }
+    
+    .panel-header::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: repeating-linear-gradient(
+            to right,
+            #000,
+            #000 12px,
+            transparent 12px,
+            transparent 15px
+        );
+        opacity: 0.4;
+    }
+
+    .panel-header h2 {
+        margin: 0;
+        font-size: 2rem;
+        font-family: 'Kalam', cursive;
+        font-weight: 700;
+        color: #000;
+    }
+
+    .panel-header .icon {
+        margin-right: 15px;
+        vertical-align: middle;
+        font-size: 28px;
+        animation: spin 8s linear infinite;
+        transform-origin: center;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(3deg); }
+        75% { transform: rotate(-3deg); }
+        100% { transform: rotate(0deg); }
+    }
+
+    .panel-body {
+        padding: 15px;
+        font-size: 1.1rem;
+    }
+
+    .btn {
+        font-family: 'Architects Daughter', cursive;
+        background-color: #fff;
+        border: 3px solid #333;
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        margin: 8px;
+        overflow: hidden;
+        box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+        transform: rotate(-0.5deg);
+        color: #000;
+        font-weight: 600;
+        text-decoration: none; /* Added */
+    }
+    
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover::before {
+        left: 100%;
+    }
+
+    .btn:hover {
+        transform: translateY(-4px) rotate(-0.5deg);
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.35);
+    }
+
+    .btn:active {
+        transform: translateY(0) rotate(0);
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+    }
+
+    .btn .icon {
+        margin-right: 10px;
+        font-size: 22px;
+    }
+
+    .btn-blue {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+        border-color: #0d47a1;
+    }
+
+    .btn-blue:hover {
+        background-color: #bbdefb;
+    }
+
+    .btn-green {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+        border-color: #1b5e20;
+    }
+    
+    .btn-green:hover {
+        background-color: #c8e6c9;
+    }
+
+    .btn-red {
+        background-color: #ffebee;
+        color: #b71c1c;
+        border-color: #b71c1c;
+    }
+    
+    .btn-red:hover {
+        background-color: #ffcdd2;
+    }
+
+    .sketchy-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 20px 0;
+        font-size: 1.2rem;
+    }
+
+    .sketchy-table th, .sketchy-table td {
+        border: 2px solid #000;
+        padding: 12px 15px;
+        position: relative;
+    }
+    
+    .sketchy-table th {
+        background-color: #d4cec2;
+        font-family: 'Kalam', cursive;
+        font-weight: 700;
+        color: #000;
+    }
+    
+    .sketchy-table th:first-child {
+        border-top-left-radius: 10px;
+    }
+    
+    .sketchy-table th:last-child {
+        border-top-right-radius: 10px;
+    }
+    
+    .sketchy-table tr:last-child td:first-child {
+        border-bottom-left-radius: 10px;
+    }
+    
+    .sketchy-table tr:last-child td:last-child {
+        border-bottom-right-radius: 10px;
+    }
+    
+    .sketchy-table tr:nth-child(even) {
+        background-color: #eae3d9;
+    }
+    
+    .sketchy-table tr:nth-child(odd) {
+        background-color: #f2ece5;
+    }
+    
+    .sketchy-table tr:hover {
+        background-color: #f0e9e0;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem;
+        color: #000;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 3px solid #000;
+        border-radius: 10px;
+        background-color: #fff;
+        font-family: 'Architects Daughter', cursive;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .form-input:focus {
+        outline: none;
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.25);
+        transform: translateY(-3px);
+    }
+
+    .two-column-layout {
+        display: flex;
+        gap: 40px;
+    }
+
+    .two-column-layout > div {
+        flex: 1;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #e9e3da;
+        border: 3px solid #000;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+        color: #000;
+        font-weight: 600;
+    }
+    
+    .badge::after {
+        content: '✨';
+        position: absolute;
+        top: 50%;
+        left: -20px;
+        transform: translateY(-50%);
+        font-size: 18px;
+        animation: sparkle 3s infinite;
+    }
+    
+    @keyframes sparkle {
+        0% { left: -20px; opacity: 0; }
+        10% { opacity: 0.8; }
+        50% { left: calc(100% + 20px); opacity: 0; }
+        100% { left: calc(100% + 20px); opacity: 0; }
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: #e1dacd;
+        margin: 5% auto;
+        padding: 30px;
+        border: 3px solid #000;
+        width: 85%;
+        max-width: 900px;
+        border-radius: 20px;
+        position: relative;
+        animation: modalDrop 0.5s ease;
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.25);
+    }
+    
+    @keyframes modalDrop {
+        0% { transform: translateY(-70px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+        padding-bottom: 20px;
+        border-bottom: 3px solid #000;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .modal-header::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: repeating-linear-gradient(
+            to right,
+            #000,
+            #000 18px,
+            transparent 18px,
+            transparent 24px
+        );
+        opacity: 0.4;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 2.2rem;
+        font-family: 'Kalam', cursive;
+        color: #000;
+        font-weight: 700;
+    }
+
+    .close {
+        position: absolute;
+        right: 25px;
+        top: 18px;
+        font-size: 32px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #000;
+        height: 45px;
+        width: 45px;
+        text-align: center;
+        line-height: 45px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .close:hover {
+        background-color: rgba(0,0,0,0.15);
+        transform: rotate(90deg);
+    }
+
+    .progress-container {
+        margin: 25px 0;
+        padding: 25px;
+        background-color: #e9e3da;
+        border: 3px solid #000;
+        border-radius: 15px;
+        position: relative;
+    }
+    
+    .progress-container::before {
+        content: '';
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        right: -6px;
+        bottom: -6px;
+        z-index: -1;
+        border: 2px dashed rgba(0,0,0,0.4);
+        border-radius: 15px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        background-color: #d4cec2;
+        border: 3px solid #000;
+        border-radius: 30px;
+        height: 30px;
+        margin-top: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(45deg, #90caf9, #42a5f5, #90caf9);
+        background-size: 200% 200%;
+        animation: gradient 3s ease infinite;
+        width: 0%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        transition: width 0.5s ease;
+        font-weight: bold;
+        text-shadow: 1px 1px 1px rgba(255,255,255,0.7);
+        font-size: 1.1rem;
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .thumbnail-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 25px;
+        perspective: 1000px;
+        justify-content: center;
+    }
+
+    .thumbnail {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border: 3px solid #000;
+        border-radius: 10px;
+        box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+        transition: all 0.3s ease;
+        transform: rotate(0deg);
+    }
+
+    .thumbnail.captured {
+        border-color: #1b5e20;
+        transform: rotate(-3deg);
+    }
+
+    .thumbnail.uploaded {
+        border-color: #0d47a1;
+        transform: rotate(3deg);
+    }
+    
+    .thumbnail:hover {
+        transform: scale(1.15) rotate(0deg);
+        z-index: 10;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.35);
+    }
+
+    .thumbnail-placeholder {
+        width: 90px;
+        height: 90px;
+        background-color: #d4cec2;
+        border: 3px dashed #000;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #000;
+        transition: all 0.3s ease;
+        position: relative;
+        transform: rotate(0deg);
+        font-weight: bold;
+    }
+    
+    .thumbnail-placeholder:nth-child(odd) {
+        transform: rotate(-3deg);
+    }
+    
+    .thumbnail-placeholder:nth-child(even) {
+        transform: rotate(3deg);
+    }
+    
+    .thumbnail-placeholder:hover {
+        background-color: #e9e3da;
+        transform: scale(1.05) rotate(0deg);
+    }
+
+    @keyframes spin-bounce {
+        0% { transform: rotate(0deg); }
+        80% { transform: rotate(360deg); }
+        90% { transform: rotate(370deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .refresh-icon {
+        display: inline-block;
+        animation: spin-bounce 2s ease-in-out infinite;
+        margin-left: 15px;
+    }
+    
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+    }
+    
+    .checkbox-label {
+        margin-left: 15px;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem;
+        color: #000;
+    }
+    
+    .custom-checkbox {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #000;
+        border-radius: 8px;
+        position: relative;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.2s;
+    }
+    
+    .custom-checkbox::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 20px;
+        color: #000;
+        transition: all 0.2s;
+    }
+    
+    .custom-checkbox.checked {
+        background: #bbdefb;
+    }
+    
+    .custom-checkbox.checked::after {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .video-container {
+        position: relative;
+        border: 3px solid #000;
+        border-radius: 15px;
+        padding: 15px;
+        background: #f5f5f5;
+        margin: 25px 0;
+        box-shadow: 5px 5px 0 rgba(0,0,0,0.25);
+        overflow: hidden;
+    }
+    
+    .video-container::before {
+        content: '📸';
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 30px;
+        z-index: 10;
+        filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
+    }
+    
+    .video-label {
+        position: absolute;
+        bottom: 15px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        padding: 8px;
+        font-family: 'Kalam', cursive;
+        font-size: 1.2rem;
+        transform: rotate(-1deg);
+    }
+    
+    .countdown {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8rem;
+        color: #fff;
+        text-shadow: 4px 4px 0 #000;
+        opacity: 0;
+        z-index: 100;
+        font-family: 'Kalam', cursive;
+    }
+    
+    .countdown.active {
+        animation: countdownAnim 1s forwards;
+    }
+    
+    @keyframes countdownAnim {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    }
+    
+    .smile-icon {
+        display: inline-block;
+        font-size: 2rem;
+        margin-left: 8px;
+        animation: smile-bounce 2s infinite;
+    }
+    
+    @keyframes smile-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+    
+    .note {
+        position: absolute;
+        font-family: 'Indie Flower', cursive;
+        color: #000;
+        transform: rotate(-5deg);
+        font-size: 1.1rem;
+        pointer-events: none;
+        line-height: 1.3;
+        font-weight: bold;
+        background-color: rgba(255, 255, 100, 0.5);
+        padding: 8px 15px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        max-width: 200px;
+        z-index: 10;
+    }
+    
+    .note-arrow {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        border-top: 4px solid #000;
+        border-right: 4px solid #000;
+        opacity: 0.8;
+    }
+    
+    .note-top-right {
+        top: 60px;
+        right: 40px;
+    }
+    
+    .note-bottom-left {
+        bottom: 40px;
+        left: 50px;
+    }
+    
+    .fun-message {
+        position: fixed;
+        bottom: -70px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 30px;
+        font-family: 'Kalam', cursive;
+        box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        z-index: 1000;
+        opacity: 0;
+        transition: all 0.5s ease;
+        font-size: 1.2rem;
+        border: 2px solid #fff;
+    }
+    
+    .fun-message.show {
+        bottom: 30px;
+        opacity: 1;
+    }
+    
+    .navbar { /* Copied from index.html, ensure it matches navbar_logout.html if needed */
+        padding: 15px 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 3px solid #000;
+        background-color: #e1dacd;
+        position: relative;
+    }
+    
+    .navbar::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background-color: rgba(0,0,0,0.15);
+        border-bottom: 2px solid #000;
+    }
+
+    .logo { /* Copied from index.html, ensure it matches navbar_logout.html if needed */
+        height: 70px;
+        transition: all 0.3s ease;
+        margin: 5px 0;
+    }
+    
+    .logo:hover {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    .camera-loading {
+        text-align: center;
+        margin: 20px 0;
+        font-family: 'Kalam', cursive;
+        font-size: 1.3rem;
+        color: #000;
+    }
+    
+    .camera-loading-dots {
+        display: inline-block;
+    }
+    
+    .camera-loading-dots::after {
+        content: '.';
+        animation: loading-dots 1.5s infinite;
+    }
+    
+    @keyframes loading-dots {
+        0% { content: '.'; }
+        33% { content: '..'; }
+        66% { content: '...'; }
+        100% { content: '.'; }
+    }
+    
+    @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+    }
+    
+    .btn-pulse {
+        animation: pulse-border 2s infinite;
+    }
+    
+    .smile-guide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0.4;
+        z-index: 5;
+    }
+    
+    .smile-guide svg {
+        width: 70%;
+        height: 70%;
+        stroke: #000;
+        stroke-width: 2;
+        stroke-dasharray: 10;
+        fill: none;
+        animation: dash-animation 20s linear infinite;
+    }
+    
+    @keyframes dash-animation {
+        to {
+            stroke-dashoffset: 1000;
+        }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        background-color: #f2ece5;
+        border: 3px dashed #000;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    .empty-state-text {
+        font-family: 'Kalam', cursive;
+        font-size: 1.3rem;
+        color: #000;
+        margin-bottom: 20px;
+    }
+
+    .video-stream-container {
+        position: relative;
+        width: 320px;
+        height: 240px;
+        border: 3px solid #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 6px 6px 0 rgba(0,0,0,0.25);
+        margin: 10px auto 20px;
+    }
+    
+    .video-stream {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .video-stream-controls {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .video-stream-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: 'Kalam', cursive;
+        font-size: 1.4rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .video-stream-container:hover .video-stream-overlay {
+        opacity: 1;
+    }
+    
+    .recognized-user {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 8px;
+        text-align: center;
+        font-family: 'Kalam', cursive;
+        font-size: 1.1rem;
+        transform: translateY(100%);
+        transition: transform 0.3s;
+    }
+    
+    .recognized-user.show {
+        transform: translateY(0);
+    }
+
+    #secure-context-warning {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #fff3cd;
+        border: 2px solid #ffeeba;
+        border-radius: 10px;
+    }
+
+    .navigation-buttons { /* For styling navigation buttons */
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+
+    @media (max-width: 768px) {
+        .two-column-layout {
+            flex-direction: column;
+        }
+        
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+            padding: 20px;
+        }
+        
+        .main-title {
+            font-size: 2.5rem;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            font-size: 1rem;
+            margin: 5px;
+        }
+        
+        .panel-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .sketchy-table {
+            font-size: 1rem;
+        }
+        
+        .sketchy-table th, .sketchy-table td {
+            padding: 8px;
+        }
+        
+        .thumbnail, .thumbnail-placeholder {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .countdown {
+            font-size: 5rem;
+        }
+        
+        .video-stream-container {
+            width: 280px;
+            height: 210px;
+        }
+    }
+    </style>
+  </head>
+<body>
+
+<div class="container">
+    <h1 class="main-title">Say Cheese! <span style="font-size: 0.8em;">User Management <span class="smile-icon">😊</span></span></h1>
+
+    <div class="navigation-buttons">
+        <a href="{{ url_for('attendance_page') }}" class="btn btn-blue">
+            <i class="material-icons icon">camera_alt</i> Take Attendance
+        </a>
+    </div>
+
+    {% if mess %}
+    <div style="text-align: center; margin-bottom: 25px;">
+        <p style="color: #721c24; background-color: #ffebee; border: 3px solid #000; padding: 15px; display: inline-block; border-radius: 15px; box-shadow: 4px 4px 0 rgba(0,0,0,0.25); font-size: 1.2rem;">{{ mess }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Removed two-column-layout for single focus page -->
+    <div>
+        <div class="sketchy-box panel panel-right"> <!-- panel-right for consistent styling if desired -->
+            <div class="panel-header">
+                <i class="material-icons icon">people</i>
+                <h2>User Directory</h2>
+            </div>
+            <div class="panel-body">
+                <button id="openModalBtn" class="btn btn-blue" style="margin-right: 15px;">
+                    <i class="material-icons" style="font-size: 22px; margin-right: 8px;">person_add</i>
+                    Add New Face
+                </button>
+                <button id="openManageUsersBtn" class="btn">
+                    <i class="material-icons" style="font-size: 22px; margin-right: 8px;">manage_accounts</i>
+                    Manage Users
+                </button>
+                
+                <div style="margin-top: 25px; text-align: center;">
+                    <span class="badge">Total Smiles Captured: {{totalreg}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ALL MODALS COPIED FROM index.html -->
+<div id="registrationModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">face</i> Say Cheese for the Camera!</h2>
+            <span class="close">&times;</span>
+        </div>
+        
+        <div id="user-info-form" style="margin-bottom: 25px;">
+            <div class="form-group">
+                <label class="form-label">What's your name?</label>
+                <input type="text" id="newusername" name="newusername" class="form-input" required placeholder="Enter your name here...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Your ID number?</label>
+                <input type="text" id="newuserid" name="newuserid" class="form-input" required placeholder="Enter your ID number...">
+            </div>
+            <button id="initiate-registration" class="btn btn-blue">Get Ready to Smile!</button>
+        </div>
+
+        <div id="registration-methods" style="display: none;">
+            <div class="progress-container sketchy-box">
+                <h3 style="margin-top: 0; font-size: 1.6rem; color: #000;">Smile Progress</h3>
+                <p id="total-progress" style="font-weight: 700; font-size: 1.2rem; color: #000;">Faces: <span id="total-images">0</span>/10</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill">0%</div>
+                </div>
+                <p style="font-style: italic; font-size: 1.1rem; color: #000;">Mix and match camera captures and uploads to get 10 awesome shots!</p>
+                <div class="thumbnail-container" id="image-thumbnails">
+                    <div class="thumbnail-placeholder">1</div>
+                    <div class="thumbnail-placeholder">2</div>
+                    <div class="thumbnail-placeholder">3</div>
+                    <div class="thumbnail-placeholder">4</div>
+                    <div class="thumbnail-placeholder">5</div>
+                    <div class="thumbnail-placeholder">6</div>
+                    <div class="thumbnail-placeholder">7</div>
+                    <div class="thumbnail-placeholder">8</div>
+                    <div class="thumbnail-placeholder">9</div>
+                    <div class="thumbnail-placeholder">10</div>
+                </div>
+            </div>
+
+            <div class="two-column-layout" style="margin-top: 30px;">
+                <div>
+                    <h3 style="font-size: 1.5rem; color: #000;"><i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">camera_alt</i> Capture Your Best Smile</h3>
+                    <div class="video-container">
+                        <video id="user-video" width="100%" height="250" autoplay muted style="border-radius: 8px;"></video>
+                        <div class="video-label">Get ready to smile! 📸</div>
+                        <div id="countdown" class="countdown">3</div>
+                        <div class="smile-guide">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" />
+                                <ellipse cx="50" cy="50" rx="30" ry="20" />
+                                <path d="M35,45 C 40,35 60,35 65,45" />
+                            </svg>
+                        </div>
+                    </div>
+                    <button id="start-camera" class="btn btn-blue" style="margin-right: 8px;">
+                        <i class="material-icons">videocam</i> Start Camera
+                    </button>
+                    <button id="capture-btn" class="btn" disabled>
+                        <i class="material-icons">photo_camera</i> Cheese!
+                    </button>
+                    <button id="stop-camera" class="btn" disabled style="margin-top: 8px;">
+                        <i class="material-icons">videocam_off</i> Stop Camera
+                    </button>
+                    
+                    <div class="camera-loading" id="camera-loading" style="display: none;">
+                        Starting camera<span class="camera-loading-dots"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 1.5rem; color: #000;"><i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">file_upload</i> Upload Your Photos</h3>
+                    <div style="border: 3px dashed #000; border-radius: 15px; padding: 25px; background-color: #e9e3da;">
+                        <p style="margin-top: 0; font-size: 1.2rem; color: #000;">Have selfies ready? Upload them here:</p>
+                        <input type="file" id="file-input" accept="image/*" multiple style="margin-bottom: 20px; font-size: 1.1rem;">
+                        <button id="upload-btn" class="btn btn-blue">
+                            <i class="material-icons">cloud_upload</i> Upload Photos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <button id="complete-registration" class="btn btn-green" disabled style="font-size: 1.3rem; padding: 15px 30px;">
+                    <i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i>
+                    All Done - Save My Smiles!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="manageUsersModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">people</i> Friend Directory</h2>
+            <span class="close manage-users-close">&times;</span>
+        </div>
+        
+        <div id="user-list-container">
+            <div style="text-align: center; margin: 30px 0;">
+                <i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i>
+                <p style="font-size: 1.3rem; color: #000;">Loading all the smiling faces...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content sketchy-box" style="max-width: 500px;">
+        <div class="modal-header" style="border-bottom-color: #721c24;">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px; color: #721c24;">warning</i> Are You Sure?</h2>
+            <span class="close confirm-close">&times;</span>
+        </div>
+        
+        <div style="margin: 25px 0; text-align: center;">
+            <p id="confirm-message" style="font-size: 1.3rem; margin-bottom: 30px; color: #000;">Do you really want to remove this friend?</p>
+            <input type="hidden" id="delete-user-id" value="">
+            <input type="hidden" id="delete-user-name" value="">
+            
+            <div>
+                <button id="confirm-cancel" class="btn" style="margin-right: 20px;">Nevermind</button>
+                <button id="confirm-delete" class="btn btn-red">Yes, Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="attendanceHistoryModal" class="modal">
+    <div class="modal-content sketchy-box">
+        <div class="modal-header">
+            <h2><i class="material-icons" style="vertical-align: middle; font-size: 30px; margin-right: 15px;">history</i> Attendance History</h2>
+            <span class="close history-close">&times;</span>
+        </div>
+        
+        <div id="history-user-info" style="text-align: center; margin: 15px 0;">
+            <h3 id="history-user-name" style="font-size: 1.8rem; margin-bottom: 5px;"></h3>
+            <p id="history-user-id" style="font-size: 1.2rem; color: #666;"></p>
+        </div>
+        
+        <div id="history-container">
+            <div style="text-align: center; margin: 30px 0;">
+                <i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i>
+                <p style="font-size: 1.3rem; color: #000;">Loading attendance history...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fun-message" id="fun-message">User management made easy! 🎉</div>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    // PASTE THE ENTIRE <script> BLOCK FROM index.html HERE
+    // Add conditional checks for page-specific elements
+    // (Same script block as in attendance.html, the conditional checks will handle what runs)
+    document.addEventListener('DOMContentLoaded', function() {
+        const secureContextWarning = document.getElementById('secure-context-warning');
+        if (secureContextWarning && window.isSecureContext === false) {
+            secureContextWarning.style.display = 'block';
+        }
+
+        // --- MODAL RELATED (COMMON) ---
+        const regModal = document.getElementById("registrationModal");
+        // regModalBtn is on user_management.html, so check for it
+        const regModalBtn = document.getElementById("openModalBtn");
+        if (regModalBtn) {
+            regModalBtn.onclick = function() {
+                if(regModal) regModal.style.display = "block";
+            }
+        }
+        // regCloseBtn is part of registrationModal, so it's fine if modal exists
+        const regCloseBtn = document.querySelector("#registrationModal .close"); // More specific selector
+        if (regCloseBtn && regModal) {
+             regCloseBtn.onclick = function() {
+                if (confirm("Are you sure you want to cancel? Your smile progress will be lost!")) {
+                    regModal.style.display = "none";
+                    if (typeof stopCameraRegistration === "function") stopCameraRegistration(); 
+                    if (typeof resetRegistration === "function") resetRegistration(); 
+                }
+            }
+        }
+
+        const historyModal = document.getElementById("attendanceHistoryModal");
+        const historyCloseBtn = document.querySelector("#attendanceHistoryModal .close"); 
+        if (historyCloseBtn && historyModal) {
+            historyCloseBtn.onclick = function() {
+                historyModal.style.display = "none";
+            }
+        }
+        
+        const manageModal = document.getElementById("manageUsersModal");
+        const manageModalBtn = document.getElementById("openManageUsersBtn"); 
+        if (manageModalBtn) {
+            manageModalBtn.onclick = function() {
+                if(manageModal) manageModal.style.display = "block";
+                if (typeof loadUserList === "function") loadUserList();
+            }
+        }
+        const manageCloseBtn = document.querySelector("#manageUsersModal .close"); 
+        if (manageCloseBtn && manageModal) {
+            manageCloseBtn.onclick = function() {
+                manageModal.style.display = "none";
+            }
+        }
+        
+        const confirmModal = document.getElementById("confirmModal");
+        const confirmCloseBtn = document.querySelector("#confirmModal .close"); 
+        if (confirmCloseBtn && confirmModal) {
+            confirmCloseBtn.onclick = function() {
+                confirmModal.style.display = "none";
+            }
+        }
+        const confirmCancelBtn = document.getElementById("confirm-cancel");
+        if (confirmCancelBtn && confirmModal) {
+            confirmCancelBtn.onclick = function() {
+                confirmModal.style.display = "none";
+            }
+        }
+        const confirmDeleteBtn = document.getElementById("confirm-delete");
+        if (confirmDeleteBtn && confirmModal) {
+            confirmDeleteBtn.onclick = function() {
+                const userIdVal = document.getElementById("delete-user-id").value;
+                const userNameVal = document.getElementById("delete-user-name").value;
+                if (userIdVal && userNameVal && typeof deleteUser === "function") {
+                    deleteUser(userIdVal, userNameVal);
+                }
+                confirmModal.style.display = "none";
+            }
+        }
+
+        window.onclick = function(event) {
+            if (regModal && event.target == regModal) {
+                if (confirm("Are you sure you want to cancel? Your smile progress will be lost!")) {
+                    regModal.style.display = "none";
+                    if (typeof stopCameraRegistration === "function") stopCameraRegistration();
+                    if (typeof resetRegistration === "function") resetRegistration();
+                }
+            } else if (manageModal && event.target == manageModal) {
+                manageModal.style.display = "none";
+            } else if (confirmModal && event.target == confirmModal) {
+                confirmModal.style.display = "none";
+            } else if (historyModal && event.target == historyModal) {
+                historyModal.style.display = "none";
+            }
+        }
+
+        const funMessage = document.getElementById("fun-message");
+        const countdown = document.getElementById("countdown"); // Inside registrationModal
+        const cameraLoading = document.getElementById("camera-loading"); // Inside registrationModal
+
+
+        // --- ATTENDANCE PAGE SPECIFIC (These elements won't be found here, so their JS won't run) ---
+        const videoStreamWrapper = document.getElementById("video-stream-wrapper");
+        const toggleCameraBtn = document.getElementById("toggle-camera-btn");
+        const startAttendanceBtn = document.getElementById("start-attendance-btn");
+        const stopAttendanceBtn = document.getElementById("stop-attendance-btn");
+        const recognizedUser = document.getElementById("recognized-user");
+        const videoStream = document.getElementById("video-stream");
+        const exportAttendanceBtn = document.getElementById("export-attendance-btn");
+
+        let isStreamActive = false; // For attendance stream
+        let attendanceCheckInterval = null;
+        let mediaStream = null; // For attendance stream
+
+        if (toggleCameraBtn && videoStreamWrapper) { // This block will not execute on user_management.html
+            toggleCameraBtn.addEventListener("click", function() {
+                // ... attendance camera toggle logic ...
+            });
+        }
+        // ... other attendance specific JS initializations ...
+
+
+        // --- REGISTRATION AND USER MANAGEMENT RELATED ---
+        const funMessages = [
+            "Taking attendance has never been this fun! 🎉", "Smile! You're on candid camera! 📸",
+            "Your face is your password! 😊", "No more taking roll calls the boring way!",
+            "Cheese! That's a perfect smile! 📸", "Attendance tracking just got cooler! ✨",
+            "Your face is registered for success! 🌟", "Who needs a sign-in sheet when you have your smile? 😁",
+            "Face recognition beats remembering passwords! 🔑", "A smile a day keeps the absence away! 😄"
+        ];
+        const smileEncouragements = [
+            "Give us your biggest smile! 😁", "Say CHEESE! 🧀", "Show those pearly whites! ✨",
+            "Smile like you mean it! 😊", "That's a perfect angle! 📐", "Looking good! Keep smiling! 🌟",
+            "Awesome smile! 😎", "Picture perfect! 🖼️", "Your smile brightens the room! ☀️",
+            "That's a camera-ready smile! 📸"
+        ];
+        
+        function showRandomMessage() {
+            if (funMessage && Math.random() > 0.7) {
+                const randomMessage = funMessages[Math.floor(Math.random() * funMessages.length)];
+                funMessage.textContent = randomMessage;
+                funMessage.classList.add("show");
+                setTimeout(() => { funMessage.classList.remove("show"); }, 3000);
+            }
+        }
+        function showSmileEncouragement() {
+            if (funMessage) {
+                const randomMessage = smileEncouragements[Math.floor(Math.random() * smileEncouragements.length)];
+                funMessage.textContent = randomMessage;
+                funMessage.classList.add("show");
+                setTimeout(() => { funMessage.classList.remove("show"); }, 3000);
+            }
+        }
+        setInterval(showRandomMessage, 10000);
+        setTimeout(showRandomMessage, 2000);
+        
+        let registrationInitiated = false;
+        let userId = null;
+        let userName = null;
+        let imageCount = 0;
+        const requiredImages = 10;
+        // let uploadedFiles = []; // Not strictly needed as global if handled per upload
+        let stream = null; // For registration camera
+
+        function loadUserList() {
+            const container = document.getElementById("user-list-container");
+            if (!container) return;
+            
+            container.innerHTML = `<div style="text-align: center; margin: 30px 0;"><i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i><p style="font-size: 1.3rem; color: #000;">Loading all the smiling faces...</p></div>`;
+
+            fetch("/get_all_users")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const users = data.users;
+                        if (users.length === 0) {
+                            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">No smiling faces registered yet. Let's add some!</div><button id="add-first-user" class="btn btn-blue"><i class="material-icons" style="font-size: 22px; margin-right: 8px;">person_add</i>Add Your First Face</button></div>`;
+                            const addFirstUserBtn = document.getElementById("add-first-user");
+                            if (addFirstUserBtn && manageModal && regModal) {
+                                addFirstUserBtn.addEventListener("click", function() {
+                                    manageModal.style.display = "none";
+                                    regModal.style.display = "block";
+                                });
+                            }
+                            return;
+                        }
+                        let html = `<table class="sketchy-table"><tr><th>Name</th><th>ID</th><th>Joined</th><th>Actions</th></tr>`;
+                        users.forEach(user => {
+                            html += `<tr><td>${user.name}</td><td>${user.user_id}</td><td>${user.registration_date}</td><td><button class="btn view-history-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem; margin-right: 8px; background-color: #e0f7fa; color: #006064; border-color: #006064;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">history</i>History</button><button class="btn btn-red delete-user-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">delete</i>Remove</button></td></tr>`;
+                        });
+                        html += `</table>`;
+                        container.innerHTML = html;
+                        
+                        document.querySelectorAll(".delete-user-btn").forEach(button => {
+                            button.addEventListener("click", function() {
+                                const uid = this.getAttribute("data-user-id");
+                                const uname = this.getAttribute("data-user-name");
+                                if (typeof openConfirmDialog === "function") openConfirmDialog(uid, uname);
+                            });
+                        });
+                        document.querySelectorAll(".view-history-btn").forEach(button => {
+                            button.addEventListener("click", function() {
+                                const uid = this.getAttribute("data-user-id");
+                                const uname = this.getAttribute("data-user-name");
+                                if (typeof viewAttendanceHistory === "function") viewAttendanceHistory(uid, uname);
+                            });
+                        });
+                    } else {
+                        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Error loading users: ${data.message}</div></div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading users:", error);
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Error loading users. Please try again.</div></div>`;
+                });
+        }
+        
+        function viewAttendanceHistory(userIdVal, userNameVal) {
+            const historyUserNameEl = document.getElementById("history-user-name");
+            const historyUserIdEl = document.getElementById("history-user-id");
+            const historyContainer = document.getElementById("history-container");
+
+            if (!historyUserNameEl || !historyUserIdEl || !historyContainer || !historyModal) return;
+
+            historyUserNameEl.textContent = userNameVal;
+            historyUserIdEl.textContent = `ID: ${userIdVal}`;
+            historyModal.style.display = "block";
+            historyContainer.innerHTML = `<div style="text-align: center; margin: 30px 0;"><i class="material-icons refresh-icon" style="font-size: 30px;">refresh</i><p style="font-size: 1.3rem; color: #000;">Loading attendance history...</p></div>`;
+
+            fetch("/get_attendance_history", {
+                method: "POST", headers: { "Content-Type": "application/json", },
+                body: JSON.stringify({ user_id: userIdVal })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const history = data.history;
+                    if (history.length === 0) {
+                        historyContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No attendance records found for this user</div></div>`;
+                        return;
+                    }
+                    const groupedHistory = {};
+                    history.forEach(record => {
+                        if (!groupedHistory[record.date]) groupedHistory[record.date] = [];
+                        groupedHistory[record.date].push(record.time);
+                    });
+                    let html = `<div class="sketchy-box" style="padding: 20px; margin-bottom: 30px;">`;
+                    for (const dateKey in groupedHistory) {
+                        html += `<div style="margin-bottom: 20px;"><h4 style="font-size: 1.3rem; color: #000; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;"><i class="material-icons" style="vertical-align: middle; font-size: 20px; margin-right: 5px;">date_range</i>${dateKey}</h4><div style="display: flex; flex-wrap: wrap; gap: 10px; margin-left: 20px;">`;
+                        groupedHistory[dateKey].forEach(time => {
+                            html += `<div style="background-color: #e8f5e9; border: 2px solid #1b5e20; border-radius: 15px; padding: 5px 12px; display: inline-block;"><i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 5px; color: #1b5e20;">schedule</i>${time}</div>`;
+                        });
+                        html += `</div></div>`;
+                    }
+                    html += `</div>`;
+                    historyContainer.innerHTML = html;
+                } else {
+                    historyContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Error loading history: ${data.message}</div></div>`;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                historyContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Error loading history. Please try again.</div></div>`;
+            });
+        }
+        
+        function openConfirmDialog(userIdVal, userNameVal) {
+            const deleteUserIdEl = document.getElementById("delete-user-id");
+            const deleteUserNameEl = document.getElementById("delete-user-name");
+            const confirmMessageEl = document.getElementById("confirm-message");
+            if (!deleteUserIdEl || !deleteUserNameEl || !confirmMessageEl || !confirmModal) return;
+
+            deleteUserIdEl.value = userIdVal;
+            deleteUserNameEl.value = userNameVal;
+            confirmMessageEl.textContent = `Are you sure you want to remove ${userNameVal} (ID: ${userIdVal})?`;
+            confirmModal.style.display = "block";
+        }
+        
+        function deleteUser(userIdVal, userNameVal) {
+            fetch("/delete_user", {
+                method: "POST", headers: { "Content-Type": "application/json", },
+                body: JSON.stringify({ user_id: userIdVal, user_name: userNameVal })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (funMessage) {
+                        funMessage.textContent = `${userNameVal} has been removed successfully! 👋`;
+                        funMessage.classList.add("show");
+                        setTimeout(() => { funMessage.classList.remove("show"); }, 3000);
+                    }
+                    if (typeof loadUserList === "function") loadUserList();
+                } else {
+                    alert(`Error removing user: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error removing user. Please try again.");
+            });
+        }
+        
+        const initiateRegBtn = document.getElementById("initiate-registration");
+        if (initiateRegBtn) {
+            initiateRegBtn.addEventListener("click", function() {
+                const newUsernameEl = document.getElementById("newusername");
+                const newUseridEl = document.getElementById("newuserid");
+                const regMethodsEl = document.getElementById("registration-methods");
+                const userInfoFormEl = document.getElementById("user-info-form");
+
+                if (!newUsernameEl || !newUseridEl || !regMethodsEl || !userInfoFormEl) return;
+
+                const usernameVal = newUsernameEl.value.trim();
+                const useridVal = newUseridEl.value.trim();
+                if (!usernameVal || !useridVal) {
+                    alert("Please enter both your name and ID");
+                    return;
+                }
+                fetch("/register_user", {
+                    method: "POST", headers: { "Content-Type": "application/json", },
+                    body: JSON.stringify({ username: usernameVal, userid: useridVal })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        userId = useridVal; // Global for registration process
+                        userName = usernameVal; // Global for registration process
+                        registrationInitiated = true;
+                        regMethodsEl.style.display = "block";
+                        userInfoFormEl.style.display = "none";
+                        if (funMessage) {
+                            funMessage.textContent = `Time to capture your best smiles, ${userName}! 📸`;
+                            funMessage.classList.add("show");
+                            setTimeout(() => { funMessage.classList.remove("show"); }, 3000);
+                        }
+                        newUsernameEl.disabled = true;
+                        newUseridEl.disabled = true;
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => { console.error("Error:", error); alert("Error starting registration"); });
+            });
+        }
+        
+        const startCamBtnReg = document.getElementById("start-camera"); // In registration modal
+        const captureBtnReg = document.getElementById("capture-btn"); // In registration modal
+        const stopCamBtnReg = document.getElementById("stop-camera"); // In registration modal
+
+        if (startCamBtnReg) startCamBtnReg.addEventListener("click", startCameraRegistration);
+        if (captureBtnReg) captureBtnReg.addEventListener("click", startCountdownRegistration);
+        if (stopCamBtnReg) stopCamBtnReg.addEventListener("click", stopCameraRegistration);
+
+        function startCameraRegistration() {
+            const startBtn = document.getElementById("start-camera"); // refers to reg modal button
+            const camLoadingEl = document.getElementById("camera-loading"); // refers to reg modal element
+            if (!startBtn || !camLoadingEl) return;
+
+            startBtn.disabled = true;
+            camLoadingEl.style.display = "block";
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" } };
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(mediaStream) {
+                        stream = mediaStream; // Uses the global 'stream' for registration
+                        const videoElement = document.getElementById("user-video");
+                        if (!videoElement) { camLoadingEl.style.display = "none"; startBtn.disabled = false; return; }
+                        videoElement.srcObject = mediaStream;
+                        videoElement.onloadedmetadata = function() {
+                            videoElement.play()
+                                .then(() => {
+                                    const capBtn = document.getElementById("capture-btn");
+                                    const stopBtn = document.getElementById("stop-camera");
+                                    if (capBtn) capBtn.disabled = false;
+                                    if (stopBtn) stopBtn.disabled = false;
+                                    camLoadingEl.style.display = "none";
+                                    if (typeof showSmileEncouragement === "function") showSmileEncouragement();
+                                })
+                                .catch(err => {
+                                    console.error("Error playing video:", err);
+                                    camLoadingEl.style.display = "none";
+                                    startBtn.disabled = false;
+                                    alert("Error playing video: " + err.message);
+                                });
+                        };
+                    })
+                    .catch(function(err) {
+                        console.error("Error accessing camera:", err);
+                        let errorMessage = "Could not access the camera. ";
+                        if (err.name === "NotAllowedError") errorMessage += "Camera access was denied.";
+                        else if (err.name === "NotFoundError") errorMessage += "No camera found.";
+                        else if (err.name === "NotReadableError") errorMessage += "Camera is in use by another application.";
+                        else if (err.name === "OverconstrainedError") {
+                            errorMessage += "Trying with basic settings...";
+                             navigator.mediaDevices.getUserMedia({ video: true })
+                                .then(function(mediaStream) {
+                                    stream = mediaStream;
+                                    const videoElement = document.getElementById("user-video");
+                                    if (!videoElement) { camLoadingEl.style.display = "none"; startBtn.disabled = false; return; }
+                                    videoElement.srcObject = mediaStream;
+                                    videoElement.play();
+                                    const capBtn = document.getElementById("capture-btn");
+                                    const stopBtn = document.getElementById("stop-camera");
+                                    if (capBtn) capBtn.disabled = false;
+                                    if (stopBtn) stopBtn.disabled = false;
+                                    camLoadingEl.style.display = "none";
+                                    if (typeof showSmileEncouragement === "function") showSmileEncouragement();
+                                })
+                                .catch(function(fallbackErr) {
+                                    console.error("Error with fallback camera settings:", fallbackErr);
+                                    alert("Could not access the camera with minimal settings.");
+                                    camLoadingEl.style.display = "none"; startBtn.disabled = false;
+                                });
+                            return;
+                        } else errorMessage += err.message;
+                        alert(errorMessage);
+                        camLoadingEl.style.display = "none"; startBtn.disabled = false;
+                    });
+            } else {
+                alert("Your browser does not support camera access.");
+                camLoadingEl.style.display = "none"; startBtn.disabled = false;
+            }
+        }
+        
+        function stopCameraRegistration() { 
+            if (stream) { // Uses global 'stream' for registration
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                const videoElement = document.getElementById("user-video");
+                const startBtn = document.getElementById("start-camera");
+                const capBtn = document.getElementById("capture-btn");
+                const stopBtn = document.getElementById("stop-camera");
+
+                if (videoElement) videoElement.srcObject = null;
+                if (startBtn) startBtn.disabled = false;
+                if (capBtn) capBtn.disabled = true;
+                if (stopBtn) stopBtn.disabled = true;
+                
+                if (funMessage) {
+                    funMessage.textContent = "Camera stopped! Ready when you are 📸";
+                    funMessage.classList.add("show");
+                    setTimeout(() => { funMessage.classList.remove("show"); }, 2000);
+                }
+            }
+        }
+        
+        function startCountdownRegistration() { 
+            const capBtn = document.getElementById("capture-btn");
+            const countdownEl = document.getElementById("countdown");
+            if (!capBtn || !countdownEl || !registrationInitiated || imageCount >= requiredImages) return;
+
+            capBtn.disabled = true;
+            let count = 3;
+            countdownEl.textContent = count;
+            countdownEl.classList.add("active");
+            
+            const encouragements = ["Big smile in 3...", "Get ready to smile!", "Say cheese in 3..."];
+            if (funMessage) {
+                funMessage.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+                funMessage.classList.add("show");
+            }
+            
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.classList.remove("active");
+                    setTimeout(() => { countdownEl.textContent = count; countdownEl.classList.add("active"); }, 50);
+                } else {
+                    clearInterval(countInterval);
+                    countdownEl.textContent = "Cheese!";
+                    setTimeout(() => {
+                        countdownEl.classList.remove("active");
+                        if (funMessage) funMessage.classList.remove("show");
+                        if (typeof captureImageRegistration === "function") captureImageRegistration(); 
+                    }, 1000);
+                }
+            }, 1000);
+        }
+        
+        function captureImageRegistration() { 
+            const videoElement = document.getElementById("user-video");
+            const capBtn = document.getElementById("capture-btn");
+            if (!videoElement || !capBtn) return;
+
+            if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+                alert("Camera not ready. Please wait a moment and try again.");
+                capBtn.disabled = false; return;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = videoElement.videoWidth; canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append("face_image", blob, "face.jpg");
+                formData.append("username", userName); formData.append("userid", userId);
+                formData.append("image_count", imageCount); formData.append("source", "camera");
+                
+                const originalText = capBtn.innerHTML;
+                capBtn.innerHTML = '<i class="material-icons refresh-icon" style="font-size: 22px;">refresh</i> Sending...';
+                
+                fetch("/capture_image", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const thumbnail = document.createElement("img");
+                        thumbnail.src = URL.createObjectURL(blob);
+                        thumbnail.classList.add("thumbnail", "captured");
+                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
+                        imageCount++;
+                        if (typeof updateProgress === "function") updateProgress();
+                        capBtn.disabled = false; capBtn.innerHTML = originalText;
+                        const messages = ["Great smile! 😊", "Perfect shot! 📸", "You look amazing! ✨"];
+                        if (funMessage) {
+                            funMessage.textContent = messages[Math.floor(Math.random() * messages.length)];
+                            funMessage.classList.add("show");
+                            setTimeout(() => { funMessage.classList.remove("show"); }, 2000);
+                        }
+                    } else {
+                        console.error("Error saving image:", data.message);
+                        let errorMsg = data.message === "No face detected in the image" ? "No face detected! Please make sure your face is visible and well-lit." : data.message;
+                        alert("Error: " + errorMsg);
+                        capBtn.innerHTML = originalText; capBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error); alert("Error uploading captured image.");
+                    capBtn.innerHTML = originalText; capBtn.disabled = false;
+                });
+            }, "image/jpeg", 0.9);
+        }
+        
+        const uploadBtnReg = document.getElementById("upload-btn");
+        if (uploadBtnReg) uploadBtnReg.addEventListener("click", uploadFilesRegistration); 
+
+        function uploadFilesRegistration() { 
+            const fileInput = document.getElementById("file-input");
+            const uploadBtn = document.getElementById("upload-btn");
+            if (!fileInput || !uploadBtn) return;
+
+            const files = fileInput.files;
+            if (!registrationInitiated) { alert("Please enter your name and ID first!"); return; }
+            if (files.length === 0) { alert("Please select some photos to upload"); return; }
+            
+            const remainingSlots = requiredImages - imageCount;
+            const filesToProcess = Math.min(remainingSlots, files.length);
+            if (filesToProcess === 0) { alert("You've already reached the maximum number of photos!"); return; }
+            
+            uploadBtn.disabled = true; const originalBtnText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<i class="material-icons refresh-icon">refresh</i> Processing...';
+            if (funMessage) {
+                funMessage.textContent = `Processing ${filesToProcess} photos... 🔄`;
+                funMessage.classList.add("show");
+            }
+            
+            let processedCount = 0, successCount = 0, failureCount = 0;
+            for (let i = 0; i < filesToProcess; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) { processedCount++; failureCount++; if (processedCount === filesToProcess && typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText); continue; }
+                const formData = new FormData();
+                formData.append("face_image", file); formData.append("username", userName);
+                formData.append("userid", userId); formData.append("image_count", imageCount + successCount);
+                formData.append("source", "upload");
+                
+                fetch("/capture_image", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    processedCount++;
+                    if (data.success) {
+                        successCount++;
+                        const thumbnail = document.createElement("img");
+                        thumbnail.src = URL.createObjectURL(file);
+                        thumbnail.classList.add("thumbnail", "uploaded");
+                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
+                        imageCount++;
+                        if (typeof updateProgress === "function") updateProgress();
+                    } else { failureCount++; console.error("Error processing image:", data.message); }
+                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                })
+                .catch(error => {
+                    console.error("Error:", error); processedCount++; failureCount++;
+                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                });
+            }
+        }
+        
+        function checkProcessingComplete(processed, total, success, failure, button, originalText) {
+            if (processed === total) {
+                button.disabled = false; button.innerHTML = originalText;
+                const fileInput = document.getElementById("file-input");
+                if (fileInput) fileInput.value = '';
+                if (funMessage) {
+                    if (success > 0 && failure === 0) funMessage.textContent = `Uploaded ${success} photos successfully! ✅`;
+                    else if (success > 0 && failure > 0) funMessage.textContent = `Uploaded ${success} photos, but ${failure} failed ⚠️`;
+                    else funMessage.textContent = "Failed to process photos. Please try different images 😕";
+                    setTimeout(() => { funMessage.classList.remove("show"); }, 3000);
+                }
+            }
+        }
+        
+        function updateProgress() {
+            const totalImagesEl = document.getElementById("total-images");
+            const progressFillEl = document.getElementById("progress-fill");
+            const completeRegBtnEl = document.getElementById("complete-registration");
+            if (!totalImagesEl || !progressFillEl || !completeRegBtnEl) return;
+
+            totalImagesEl.textContent = imageCount;
+            const percentage = (imageCount / requiredImages) * 100;
+            progressFillEl.style.width = percentage + "%";
+            progressFillEl.textContent = Math.round(percentage) + "%";
+            completeRegBtnEl.disabled = imageCount < requiredImages;
+            
+            if (funMessage) {
+                if (imageCount === 5) funMessage.textContent = "Halfway there! 5 more to go! 🎉";
+                else if (imageCount === 9) funMessage.textContent = "Just one more photo to go! 🎯";
+                else if (imageCount === requiredImages) funMessage.textContent = "All done! Click 'Save My Smiles' below! 🎊";
+                else return; 
+                funMessage.classList.add("show");
+                setTimeout(() => { funMessage.classList.remove("show"); }, 2000);
+            }
+        }
+        
+        function updateThumbnail(index, thumbnail) {
+            const thumbnailContainer = document.getElementById("image-thumbnails");
+            if (!thumbnailContainer) return;
+            const placeholders = thumbnailContainer.getElementsByClassName("thumbnail-placeholder");
+            if (index < placeholders.length && placeholders[0]) { 
+                thumbnailContainer.replaceChild(thumbnail, placeholders[0]);
+            } else if (placeholders.length === 0) { 
+                thumbnailContainer.appendChild(thumbnail);
+            }
+        }
+        
+        const completeRegBtn = document.getElementById("complete-registration");
+        if (completeRegBtn) {
+            completeRegBtn.addEventListener("click", function() {
+                if (imageCount < requiredImages) { alert(`Please provide all ${requiredImages} images`); return; }
+                this.disabled = true;
+                this.innerHTML = '<i class="material-icons refresh-icon" style="font-size: 24px;">refresh</i> Saving...';
+                fetch("/complete_registration", {
+                    method: "POST", headers: { "Content-Type": "application/json", },
+                    body: JSON.stringify({ username: userName, userid: userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> Success!';
+                        this.style.backgroundColor = "#4caf50"; this.style.color = "white";
+                        if (funMessage) {
+                            funMessage.textContent = "Registration complete! Your face is now in our system! 🎉";
+                            funMessage.classList.add("show");
+                        }
+                        setTimeout(() => {
+                            if (regModal) regModal.style.display = "none";
+                            if (typeof stopCameraRegistration === "function") stopCameraRegistration();
+                            if (typeof resetRegistration === "function") resetRegistration();
+                            window.location.reload(); 
+                        }, 2000);
+                    } else {
+                        this.disabled = false;
+                        this.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+                        alert("Error completing registration: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error); this.disabled = false;
+                    this.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+                    alert("Error completing registration");
+                });
+            });
+        }
+        
+        function resetRegistration() {
+            registrationInitiated = false; userId = null; userName = null; imageCount = 0; // uploadedFiles = [];
+            const regMethodsEl = document.getElementById("registration-methods");
+            const userInfoFormEl = document.getElementById("user-info-form");
+            const newUsernameEl = document.getElementById("newusername");
+            const newUseridEl = document.getElementById("newuserid");
+            const fileInputEl = document.getElementById("file-input");
+            const totalImagesEl = document.getElementById("total-images");
+            const progressFillEl = document.getElementById("progress-fill");
+            const completeBtn = document.getElementById("complete-registration");
+            const thumbnailContainer = document.getElementById("image-thumbnails");
+
+            if (regMethodsEl) regMethodsEl.style.display = "none";
+            if (userInfoFormEl) userInfoFormEl.style.display = "block";
+            if (newUsernameEl) { newUsernameEl.disabled = false; newUsernameEl.value = ""; }
+            if (newUseridEl) { newUseridEl.disabled = false; newUseridEl.value = ""; }
+            if (fileInputEl) fileInputEl.value = "";
+            if (totalImagesEl) totalImagesEl.textContent = "0";
+            if (progressFillEl) { progressFillEl.style.width = "0%"; progressFillEl.textContent = "0%"; }
+            if (completeBtn) {
+                completeBtn.disabled = true;
+                completeBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 24px; margin-right: 8px;">check_circle</i> All Done - Save My Smiles!';
+                completeBtn.style.backgroundColor = ""; completeBtn.style.color = "";
+            }
+            if (thumbnailContainer) {
+                thumbnailContainer.innerHTML = "";
+                for (let i = 0; i < requiredImages; i++) {
+                    const placeholder = document.createElement("div");
+                    placeholder.className = "thumbnail-placeholder"; placeholder.textContent = i + 1;
+                    thumbnailContainer.appendChild(placeholder);
+                }
+            }
+        }
+
+        // No need for refreshAttendance or updateAttendanceTable on this page
+        
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.sketchy-box').forEach(box => {
+                const randomRotation = (Math.random() * 2 - 1) * 0.8;
+                box.style.transform = `rotate(${randomRotation}deg)`;
+            });
+            const mainTitle = document.querySelector('.main-title');
+            if (mainTitle) {
+                setTimeout(() => { mainTitle.style.opacity = '1'; }, 300);
+            }
+        });
+
+    }); // End DOMContentLoaded
+</script>
+
+</body>
+</html>
+{% endblock %}

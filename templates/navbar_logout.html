@@ -40,6 +40,14 @@
 
         .logo {
             height: 40px;
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
+        .navbar-actions {
+            margin-left: auto; /* Pushes actions to the right */
         }
 
         /* Mobile menu */
@@ -57,8 +65,10 @@
                 flex-direction: column;
                 height: 24px;
                 width: 30px;
-                position: absolute;
-                left: 20px;
+                position: absolute; /* Changed from relative to absolute for positioning */
+                left: 20px; /* Keep it on the left */
+                top: 50%; /* Center vertically */
+                transform: translateY(-50%); /* Adjust for exact centering */
                 justify-content: space-between;
                 z-index: 2;
             }
@@ -68,6 +78,7 @@
                 height: 2px;
                 width: 100%;
                 background: #333;
+                transition: transform 0.3s ease, opacity 0.3s ease; /* Added transition */
             }
 
             .menu-toggle {
@@ -75,7 +86,9 @@
                 position: absolute;
                 height: 32px;
                 width: 30px;
-                left: 20px;
+                left: 20px; /* Keep it on the left */
+                top: 50%; /* Center vertically */
+                transform: translateY(-50%); /* Adjust for exact centering */
                 z-index: 5;
                 opacity: 0;
                 cursor: pointer;
@@ -83,7 +96,7 @@
 
             /* Animation for menu toggle */
             .menu-toggle:checked ~ .hamburger-lines .line1 {
-                transform: rotate(45deg);
+                transform: translateY(8px) rotate(45deg); /* Adjusted for better centering */
                 transform-origin: center;
             }
 
@@ -92,17 +105,23 @@
             }
 
             .menu-toggle:checked ~ .hamburger-lines .line3 {
-                transform: rotate(-45deg);
+                transform: translateY(-8px) rotate(-45deg); /* Adjusted for better centering */
                 transform-origin: center;
             }
 
             .logo {
-                margin: 0 auto;
+                margin: 0 auto; /* Center logo on mobile */
+            }
+            .navbar-actions {
+                display: none; /* Hide actions on mobile, assuming they'd go into a real menu */
             }
         }
     </style>
   </head>
   <body>
+    {% block page_title %}
+    {% endblock page_title %}
+
     <nav class="navbar">
         <div class="navbar-container">
             <input type="checkbox" class="menu-toggle" id="menu-toggle">
@@ -111,7 +130,11 @@
                 <span class="line line2"></span>
                 <span class="line line3"></span>
             </div>
-            <img src="static/images/spicy.png" alt="Logged-In" class="logo">
+            <img src="{{ url_for('static', filename='images/spicy.png') }}" alt="Logged-In" class="logo">
+            <div class="navbar-actions">
+                {% block navbar_actions %}
+                {% endblock navbar_actions %}
+            </div>
         </div>
     </nav>
     

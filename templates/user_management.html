@@ -1,16 +1,24 @@
 {% extends 'navbar_logout.html' %}
+
+{% block page_title %}
+    <h1 class="main-title">Say Cheese! <span style="font-size: 0.8em;">User Management <span class="smile-icon">😊</span></span></h1>
+{% endblock page_title %}
+
+{% block navbar_actions %}
+    <a href="{{ url_for('attendance_page') }}" class="btn btn-blue" style="margin: 0; font-size: 0.9rem; padding: 8px 12px;">
+        <i class="material-icons icon" style="font-size: 18px; margin-right: 5px;">camera_alt</i> Take Attendance
+    </a>
+{% endblock navbar_actions %}
+
 {% block adminpage %}
 <html lang="en">
   <head>
-    <!-- Include the same head content as index.html: meta, title, style imports -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Say Cheese! - User Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
-      /* PASTE THE ENTIRE <style> BLOCK FROM index.html HERE */
-      /* (Same style block as in attendance.html) */
       @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap');
     
     * {
@@ -19,10 +27,7 @@
     
     body {
         font-family: 'Architects Daughter', cursive;
-        background-color: #faf9f5;
         color: #000;
-        margin: 0;
-        padding: 0;
         overflow-x: hidden;
         line-height: 1.6;
         font-size: 16px;
@@ -77,9 +82,9 @@
 
     .main-title {
         font-family: 'Kalam', cursive;
-        font-size: 4rem;
+        font-size: 3.5rem; /* Slightly smaller if at very top */
         text-align: center;
-        margin: 2rem 0;
+        margin: 1rem 0 0.5rem 0; /* Adjusted margin for top position */
         position: relative;
         color: #000;
         text-shadow: 3px 3px 0 #fff;
@@ -104,12 +109,10 @@
     
     .panel-left {
         transform: rotate(-0.5deg);
-        /* margin-right: 20px; */
     }
     
     .panel-right {
         transform: rotate(0.7deg);
-        /* margin-left: 20px; */
     }
 
     .panel-header {
@@ -185,7 +188,7 @@
         transform: rotate(-0.5deg);
         color: #000;
         font-weight: 600;
-        text-decoration: none; /* Added */
+        text-decoration: none; 
     }
     
     .btn::before {
@@ -756,36 +759,8 @@
         opacity: 1;
     }
     
-    .navbar { /* Copied from index.html, ensure it matches navbar_logout.html if needed */
-        padding: 15px 25px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 3px solid #000;
-        background-color: #e1dacd;
-        position: relative;
-    }
-    
-    .navbar::after {
-        content: '';
-        position: absolute;
-        bottom: -8px;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        background-color: rgba(0,0,0,0.15);
-        border-bottom: 2px solid #000;
-    }
-
-    .logo { /* Copied from index.html, ensure it matches navbar_logout.html if needed */
-        height: 70px;
-        transition: all 0.3s ease;
-        margin: 5px 0;
-    }
-    
-    .logo:hover {
-        transform: scale(1.15) rotate(-5deg);
-    }
+    /* Navbar and Logo styles are now primarily in navbar_logout.html */
+    /* Removed redundant .navbar and .logo styles from here */
 
     .camera-loading {
         text-align: center;
@@ -944,10 +919,7 @@
         border-radius: 10px;
     }
 
-    .navigation-buttons { /* For styling navigation buttons */
-        text-align: center;
-        margin-bottom: 30px;
-    }
+    /* .navigation-buttons was removed from here */
     
 
     @media (max-width: 768px) {
@@ -962,7 +934,7 @@
         }
         
         .main-title {
-            font-size: 2.5rem;
+            font-size: 2.5rem; /* Adjusted for mobile if at very top */
         }
         
         .btn {
@@ -1002,13 +974,7 @@
 <body>
 
 <div class="container">
-    <h1 class="main-title">Say Cheese! <span style="font-size: 0.8em;">User Management <span class="smile-icon">😊</span></span></h1>
-
-    <div class="navigation-buttons">
-        <a href="{{ url_for('attendance_page') }}" class="btn btn-blue">
-            <i class="material-icons icon">camera_alt</i> Take Attendance
-        </a>
-    </div>
+    <!-- Removed .navigation-buttons div, button moved to navbar_actions block -->
 
     {% if mess %}
     <div style="text-align: center; margin-bottom: 25px;">
@@ -1016,9 +982,8 @@
     </div>
     {% endif %}
 
-    <!-- Removed two-column-layout for single focus page -->
     <div>
-        <div class="sketchy-box panel panel-right"> <!-- panel-right for consistent styling if desired -->
+        <div class="sketchy-box panel panel-right"> 
             <div class="panel-header">
                 <i class="material-icons icon">people</i>
                 <h2>User Directory</h2>
@@ -1041,7 +1006,6 @@
     </div>
 </div>
 
-<!-- ALL MODALS COPIED FROM index.html -->
 <div id="registrationModal" class="modal">
     <div class="modal-content sketchy-box">
         <div class="modal-header">
@@ -1064,22 +1028,17 @@
         <div id="registration-methods" style="display: none;">
             <div class="progress-container sketchy-box">
                 <h3 style="margin-top: 0; font-size: 1.6rem; color: #000;">Smile Progress</h3>
-                <p id="total-progress" style="font-weight: 700; font-size: 1.2rem; color: #000;">Faces: <span id="total-images">0</span>/10</p>
+                <p id="total-progress" style="font-weight: 700; font-size: 1.2rem; color: #000;">Faces: <span id="total-images">0</span>/5</p>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill">0%</div>
                 </div>
-                <p style="font-style: italic; font-size: 1.1rem; color: #000;">Mix and match camera captures and uploads to get 10 awesome shots!</p>
+                <p style="font-style: italic; font-size: 1.1rem; color: #000;">Mix and match camera captures and uploads to get 5 awesome shots!</p>
                 <div class="thumbnail-container" id="image-thumbnails">
                     <div class="thumbnail-placeholder">1</div>
                     <div class="thumbnail-placeholder">2</div>
                     <div class="thumbnail-placeholder">3</div>
                     <div class="thumbnail-placeholder">4</div>
                     <div class="thumbnail-placeholder">5</div>
-                    <div class="thumbnail-placeholder">6</div>
-                    <div class="thumbnail-placeholder">7</div>
-                    <div class="thumbnail-placeholder">8</div>
-                    <div class="thumbnail-placeholder">9</div>
-                    <div class="thumbnail-placeholder">10</div>
                 </div>
             </div>
 
@@ -1200,26 +1159,20 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
 <script>
-    // PASTE THE ENTIRE <script> BLOCK FROM index.html HERE
-    // Add conditional checks for page-specific elements
-    // (Same script block as in attendance.html, the conditional checks will handle what runs)
     document.addEventListener('DOMContentLoaded', function() {
-        const secureContextWarning = document.getElementById('secure-context-warning');
+        const secureContextWarning = document.getElementById('secure-context-warning'); // This ID is not on this page, but check is harmless
         if (secureContextWarning && window.isSecureContext === false) {
             secureContextWarning.style.display = 'block';
         }
 
-        // --- MODAL RELATED (COMMON) ---
         const regModal = document.getElementById("registrationModal");
-        // regModalBtn is on user_management.html, so check for it
-        const regModalBtn = document.getElementById("openModalBtn");
-        if (regModalBtn) {
+        const regModalBtn = document.getElementById("openModalBtn"); 
+        if (regModalBtn) { 
             regModalBtn.onclick = function() {
                 if(regModal) regModal.style.display = "block";
             }
         }
-        // regCloseBtn is part of registrationModal, so it's fine if modal exists
-        const regCloseBtn = document.querySelector("#registrationModal .close"); // More specific selector
+        const regCloseBtn = document.querySelector("#registrationModal .close");
         if (regCloseBtn && regModal) {
              regCloseBtn.onclick = function() {
                 if (confirm("Are you sure you want to cancel? Your smile progress will be lost!")) {
@@ -1240,7 +1193,7 @@
         
         const manageModal = document.getElementById("manageUsersModal");
         const manageModalBtn = document.getElementById("openManageUsersBtn"); 
-        if (manageModalBtn) {
+        if (manageModalBtn) { 
             manageModalBtn.onclick = function() {
                 if(manageModal) manageModal.style.display = "block";
                 if (typeof loadUserList === "function") loadUserList();
@@ -1295,30 +1248,14 @@
         }
 
         const funMessage = document.getElementById("fun-message");
-        const countdown = document.getElementById("countdown"); // Inside registrationModal
-        const cameraLoading = document.getElementById("camera-loading"); // Inside registrationModal
+        const countdown = document.getElementById("countdown"); 
+        const cameraLoading = document.getElementById("camera-loading"); 
 
 
-        // --- ATTENDANCE PAGE SPECIFIC (These elements won't be found here, so their JS won't run) ---
+        // --- ATTENDANCE PAGE SPECIFIC ELEMENTS (will be null here, so related JS won't run) ---
         const videoStreamWrapper = document.getElementById("video-stream-wrapper");
         const toggleCameraBtn = document.getElementById("toggle-camera-btn");
-        const startAttendanceBtn = document.getElementById("start-attendance-btn");
-        const stopAttendanceBtn = document.getElementById("stop-attendance-btn");
-        const recognizedUser = document.getElementById("recognized-user");
-        const videoStream = document.getElementById("video-stream");
-        const exportAttendanceBtn = document.getElementById("export-attendance-btn");
-
-        let isStreamActive = false; // For attendance stream
-        let attendanceCheckInterval = null;
-        let mediaStream = null; // For attendance stream
-
-        if (toggleCameraBtn && videoStreamWrapper) { // This block will not execute on user_management.html
-            toggleCameraBtn.addEventListener("click", function() {
-                // ... attendance camera toggle logic ...
-            });
-        }
-        // ... other attendance specific JS initializations ...
-
+        // ... and other attendance specific elements ...
 
         // --- REGISTRATION AND USER MANAGEMENT RELATED ---
         const funMessages = [
@@ -1358,9 +1295,8 @@
         let userId = null;
         let userName = null;
         let imageCount = 0;
-        const requiredImages = 10;
-        // let uploadedFiles = []; // Not strictly needed as global if handled per upload
-        let stream = null; // For registration camera
+        const requiredImages = 5; // CHANGED FROM 10 to 5
+        let stream = null; 
 
         function loadUserList() {
             const container = document.getElementById("user-list-container");
@@ -1523,8 +1459,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        userId = useridVal; // Global for registration process
-                        userName = usernameVal; // Global for registration process
+                        userId = useridVal; 
+                        userName = usernameVal; 
                         registrationInitiated = true;
                         regMethodsEl.style.display = "block";
                         userInfoFormEl.style.display = "none";
@@ -1543,17 +1479,17 @@
             });
         }
         
-        const startCamBtnReg = document.getElementById("start-camera"); // In registration modal
-        const captureBtnReg = document.getElementById("capture-btn"); // In registration modal
-        const stopCamBtnReg = document.getElementById("stop-camera"); // In registration modal
+        const startCamBtnReg = document.getElementById("start-camera"); 
+        const captureBtnReg = document.getElementById("capture-btn"); 
+        const stopCamBtnReg = document.getElementById("stop-camera"); 
 
         if (startCamBtnReg) startCamBtnReg.addEventListener("click", startCameraRegistration);
         if (captureBtnReg) captureBtnReg.addEventListener("click", startCountdownRegistration);
         if (stopCamBtnReg) stopCamBtnReg.addEventListener("click", stopCameraRegistration);
 
         function startCameraRegistration() {
-            const startBtn = document.getElementById("start-camera"); // refers to reg modal button
-            const camLoadingEl = document.getElementById("camera-loading"); // refers to reg modal element
+            const startBtn = document.getElementById("start-camera"); 
+            const camLoadingEl = document.getElementById("camera-loading"); 
             if (!startBtn || !camLoadingEl) return;
 
             startBtn.disabled = true;
@@ -1563,7 +1499,7 @@
                 const constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" } };
                 navigator.mediaDevices.getUserMedia(constraints)
                     .then(function(mediaStream) {
-                        stream = mediaStream; // Uses the global 'stream' for registration
+                        stream = mediaStream; 
                         const videoElement = document.getElementById("user-video");
                         if (!videoElement) { camLoadingEl.style.display = "none"; startBtn.disabled = false; return; }
                         videoElement.srcObject = mediaStream;
@@ -1624,7 +1560,7 @@
         }
         
         function stopCameraRegistration() { 
-            if (stream) { // Uses global 'stream' for registration
+            if (stream) { 
                 stream.getTracks().forEach(track => track.stop());
                 stream = null;
                 const videoElement = document.getElementById("user-video");
@@ -1813,8 +1749,8 @@
             completeRegBtnEl.disabled = imageCount < requiredImages;
             
             if (funMessage) {
-                if (imageCount === 5) funMessage.textContent = "Halfway there! 5 more to go! 🎉";
-                else if (imageCount === 9) funMessage.textContent = "Just one more photo to go! 🎯";
+                if (imageCount === Math.ceil(requiredImages / 2) && requiredImages > 1) funMessage.textContent = "Halfway there! Keep smiling! 🎉";
+                else if (imageCount === requiredImages - 1 && requiredImages > 1) funMessage.textContent = "Just one more photo to go! 🎯";
                 else if (imageCount === requiredImages) funMessage.textContent = "All done! Click 'Save My Smiles' below! 🎊";
                 else return; 
                 funMessage.classList.add("show");
@@ -1873,7 +1809,7 @@
         }
         
         function resetRegistration() {
-            registrationInitiated = false; userId = null; userName = null; imageCount = 0; // uploadedFiles = [];
+            registrationInitiated = false; userId = null; userName = null; imageCount = 0; 
             const regMethodsEl = document.getElementById("registration-methods");
             const userInfoFormEl = document.getElementById("user-info-form");
             const newUsernameEl = document.getElementById("newusername");
@@ -1898,15 +1834,13 @@
             }
             if (thumbnailContainer) {
                 thumbnailContainer.innerHTML = "";
-                for (let i = 0; i < requiredImages; i++) {
+                for (let i = 0; i < requiredImages; i++) { // requiredImages is now 5
                     const placeholder = document.createElement("div");
                     placeholder.className = "thumbnail-placeholder"; placeholder.textContent = i + 1;
                     thumbnailContainer.appendChild(placeholder);
                 }
             }
         }
-
-        // No need for refreshAttendance or updateAttendanceTable on this page
         
         window.addEventListener('load', function() {
             document.querySelectorAll('.sketchy-box').forEach(box => {
@@ -1919,7 +1853,7 @@
             }
         });
 
-    }); // End DOMContentLoaded
+    });
 </script>
 
 </body>

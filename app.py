@@ -106,143 +106,100 @@ resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 print("Face recognition models loaded successfully.")
 
 def format_time_to_12hr(time_str_24hr):
-    """Converts HH:MM:SS to HH:MM:SS AM/PM."""
-    if not time_str_24hr:
-        return ""
+    if not time_str_24hr: return ""
     try:
-        dt_obj = datetime.strptime(time_str_24hr, "%H:%M:%S")
-        return dt_obj.strftime("%I:%M:%S %p")
-    except ValueError:
-        # If already in 12hr or other format, return as is (or handle error)
-        return time_str_24hr
+        return datetime.strptime(time_str_24hr, "%H:%M:%S").strftime("%I:%M:%S %p")
+    except ValueError: return time_str_24hr
 
 def extract_attendance(target_date_str=None):
-    """
-    Extracts attendance records for a given date.
-    If target_date_str is None, fetches for today's date (IST).
-    Times are formatted to 12-hour AM/PM.
-    """
-    def _extract_attendance_for_date(date_to_query_str_db):
+    def _extract(date_to_query_db):
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT name, user_id, time FROM attendance WHERE date = ? ORDER BY time",
-                (date_to_query_str_db,)
-            )
-            result = cursor.fetchall()
-            names = [row[0] for row in result]
-            rolls = [row[1] for row in result]
-            times = [format_time_to_12hr(row[2]) for row in result] # Format time here
-            l = len(result)
-            print(f"Retrieved {l} attendance records for {date_to_query_str_db} from DB.")
-            return names, rolls, times, l
+            cursor.execute("SELECT name, user_id, time FROM attendance WHERE date = ? ORDER BY time", (date_to_query_db,))
+            res = cursor.fetchall()
+            return [r[0] for r in res], [r[1] for r in res], [format_time_to_12hr(r[2]) for r in res], len(res)
 
+    date_to_query = target_date_str or datetime.now(ist).strftime("%Y-%m-%d")
     if target_date_str:
-        try:
-            # Validate and use the provided date string (expected YYYY-MM-DD)
-            datetime.strptime(target_date_str, "%Y-%m-%d") 
-            date_to_query_db = target_date_str
-        except ValueError:
-            print(f"Invalid date format for target_date_str: {target_date_str}. Defaulting to today.")
-            date_to_query_db = datetime.now(ist).strftime("%Y-%m-%d")
-    else:
-        # Default to today's date (IST) for database query
-        date_to_query_db = datetime.now(ist).strftime("%Y-%m-%d")
-
+        try: datetime.strptime(target_date_str, "%Y-%m-%d")
+        except ValueError: date_to_query = datetime.now(ist).strftime("%Y-%m-%d")
+    
     try:
-        return execute_with_retry(lambda: _extract_attendance_for_date(date_to_query_db))
+        names, rolls, times, l = execute_with_retry(lambda: _extract(date_to_query))
+        print(f"Retrieved {l} records for {date_to_query} from DB.")
+        return names, rolls, times, l
     except Exception as e:
-        print(f"Error extracting attendance for {date_to_query_db} from DB: {e}")
-        # Fallback to CSV only if querying for today and DB fails
-        if date_to_query_db == datetime.now(ist).strftime("%Y-%m-%d"): # datetoday is IST based for CSV
+        print(f"Error extracting for {date_to_query} from DB: {e}")
+        if date_to_query == datetime.now(ist).strftime("%Y-%m-%d"):
             try:
                 df = pd.read_csv(f'Attendance/Attendance-{datetoday}.csv')
-                names = df['Name'].tolist()
-                rolls = df['Roll'].tolist()
-                times = [format_time_to_12hr(t) for t in df['Time'].tolist()]
-                l = len(df)
-                print(f"Retrieved {l} attendance records for today from CSV as fallback.")
-                return names, rolls, times, l
-            except Exception as csv_e:
-                print(f"Failed to read attendance from CSV: {csv_e}")
+                print(f"Retrieved {len(df)} records for today from CSV fallback.")
+                return df['Name'].tolist(), df['Roll'].tolist(), [format_time_to_12hr(t) for t in df['Time'].tolist()], len(df)
+            except Exception as csv_e: print(f"CSV fallback failed: {csv_e}")
         return [], [], [], 0
 
-
 def get_total_users():
-    def _get_count():
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM users")
-            return cursor.fetchone()[0]
-    try: return execute_with_retry(_get_count)
-    except Exception as e: print(f"Error getting user count: {e}"); return 0
+    def _get():
+        with get_db_connection() as conn: return conn.cursor().execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    try: return execute_with_retry(_get)
+    except: return 0
 
 def get_all_users_from_db():
-    def _get_users():
+    def _get():
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT name, user_id, registration_date FROM users ORDER BY name")
-            return [{'name': r[0], 'user_id': r[1], 'registration_date': r[2]} for r in cursor.fetchall()]
-    try: return execute_with_retry(_get_users)
-    except Exception as e: print(f"Error getting users: {e}"); traceback.print_exc(); return []
+            return [{'name': r[0], 'user_id': r[1], 'registration_date': r[2]} 
+                    for r in conn.cursor().execute("SELECT name, user_id, registration_date FROM users ORDER BY name").fetchall()]
+    try: return execute_with_retry(_get)
+    except: return []
 
 def add_user_to_db(name, user_id):
     def _add():
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            reg_date = datetime.now(ist).strftime("%Y-%m-%d")
-            cursor.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,))
-            if cursor.fetchone(): return False # User exists
-            cursor.execute("INSERT INTO users (name, user_id, registration_date) VALUES (?, ?, ?)", (name, user_id, reg_date))
+            cur = conn.cursor()
+            if cur.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)).fetchone(): return False
+            cur.execute("INSERT INTO users (name, user_id, registration_date) VALUES (?, ?, ?)", 
+                        (name, user_id, datetime.now(ist).strftime("%Y-%m-%d")))
             return True
     try: return execute_with_retry(_add)
-    except sqlite3.IntegrityError: return False
-    except Exception as e: print(f"Error adding user: {e}"); traceback.print_exc(); return False
+    except: return False
 
 def delete_user_from_db(user_id):
     def _delete():
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT name FROM users WHERE user_id = ?", (user_id,))
-            res = cursor.fetchone()
-            if not res: return False, None
-            user_name = res[0]
-            cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,)) # Cascade delete handles others
-            return cursor.rowcount > 0, user_name
+            cur = conn.cursor()
+            name_res = cur.execute("SELECT name FROM users WHERE user_id = ?", (user_id,)).fetchone()
+            if not name_res: return False, None
+            deleted = cur.execute("DELETE FROM users WHERE user_id = ?", (user_id,)).rowcount > 0
+            return deleted, name_res[0]
     try:
         deleted, user_name = execute_with_retry(_delete)
         if deleted and user_name:
             for d in [f'static/faces/{user_name}_{user_id}', f'static/temp_embeddings/{user_name}_{user_id}']:
                 if os.path.exists(d): shutil.rmtree(d, ignore_errors=True)
-            # Optional: Update CSVs (DB is primary source of truth now)
         return deleted
-    except Exception as e: print(f"Error deleting user: {e}"); traceback.print_exc(); return False
+    except: return False
 
 def save_embedding(user_id, embedding):
     def _save():
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            emb_bytes = embedding.cpu().numpy().tobytes()
-            cursor.execute("INSERT INTO embeddings (user_id, embedding) VALUES (?, ?)", (user_id, emb_bytes))
+            conn.cursor().execute("INSERT INTO embeddings (user_id, embedding) VALUES (?, ?)", 
+                                  (user_id, embedding.cpu().numpy().tobytes()))
             return True
     try: return execute_with_retry(_save)
-    except Exception as e: print(f"Error saving embedding: {e}"); traceback.print_exc(); return False
+    except: return False
 
 def get_all_embeddings():
     def _get():
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT u.name, u.user_id, e.embedding FROM users u JOIN embeddings e ON u.user_id = e.user_id")
             emb_dict = {}
-            for name, uid, emb_bytes in cursor.fetchall():
-                try:
-                    arr = np.frombuffer(emb_bytes, dtype=np.float32).reshape(1, -1)
-                    emb_dict[f"{name}_{uid}"] = torch.from_numpy(arr).to(device)
-                except Exception as e: print(f"Error processing embedding for {name}_{uid}: {e}")
+            for name, uid, b in conn.cursor().execute("SELECT u.name, u.user_id, e.embedding FROM users u JOIN embeddings e ON u.user_id = e.user_id").fetchall():
+                try: emb_dict[f"{name}_{uid}"] = torch.from_numpy(np.frombuffer(b, dtype=np.float32).reshape(1, -1)).to(device)
+                except: pass
             return emb_dict
     try: return execute_with_retry(_get)
-    except Exception as e: print(f"Error getting all embeddings: {e}"); traceback.print_exc(); return {}
+    except: return {}
 
+# --- MODIFIED add_attendance function ---
 def add_attendance(name, user_id):
     def _add():
         with get_db_connection() as conn:
@@ -251,20 +208,29 @@ def add_attendance(name, user_id):
             date_db = now.strftime("%Y-%m-%d")
             time_db_24hr = now.strftime("%H:%M:%S")
             
-            cursor.execute("SELECT 1 FROM attendance WHERE user_id = ? AND date = ?", (user_id, date_db))
-            if cursor.fetchone(): return False, None # Already marked
+            # REMOVED: Check for existing attendance on the same day.
+            # cursor.execute("SELECT 1 FROM attendance WHERE user_id = ? AND date = ?", (user_id, date_db))
+            # if cursor.fetchone(): return False, None # Already marked
             
-            cursor.execute("INSERT INTO attendance (user_id, name, date, time) VALUES (?, ?, ?, ?)", (user_id, name, date_db, time_db_24hr))
+            # Always insert a new record for each recognition
+            cursor.execute("INSERT INTO attendance (user_id, name, date, time) VALUES (?, ?, ?, ?)", 
+                           (user_id, name, date_db, time_db_24hr))
             
-            # CSV (datetoday is IST based for filename)
+            # Update CSV (datetoday is IST based for filename)
             csv_path = f'Attendance/Attendance-{datetoday}.csv'
             if not os.path.exists(csv_path):
                 with open(csv_path, 'w') as f: f.write('Name,Roll,Time\n')
             with open(csv_path, 'a') as f: f.write(f'{name},{user_id},{time_db_24hr}\n')
             
+            print(f"Logged attendance for {name} (ID: {user_id}) at {time_db_24hr} (IST).")
             return True, format_time_to_12hr(time_db_24hr) # Return formatted time
-    try: return execute_with_retry(_add)
-    except Exception as e: print(f"Error adding attendance: {e}"); traceback.print_exc(); return False, None
+    try: 
+        return execute_with_retry(_add)
+    except Exception as e: 
+        print(f"Error adding attendance: {e}")
+        traceback.print_exc()
+        return False, None
+# --- END OF MODIFIED add_attendance function ---
 
 def extract_face(img_pil, box, image_size=160, margin=20):
     try:
@@ -281,87 +247,59 @@ def extract_face(img_pil, box, image_size=160, margin=20):
         face = img_pil.crop((x1_new, y1_new, x2_new, y2_new)).resize((image_size, image_size), Image.Resampling.BILINEAR)
         face_np = np.array(face, dtype=np.float32) / 255.0
         return torch.from_numpy(face_np).permute(2, 0, 1).unsqueeze(0).to(device)
-    except Exception as e: print(f"Error in extract_face: {e}"); traceback.print_exc(); return None
+    except: return None
 
 def process_face_image(image_path):
     try:
         img = Image.open(image_path).convert('RGB')
-        # Optional: Histogram equalization (can sometimes help, sometimes not)
-        # img_np = np.array(img)
-        # if img_np.shape[2] == 3:
-        #     img_yuv = cv2.cvtColor(img_np, cv2.COLOR_RGB2YUV)
-        #     img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
-        #     img = Image.fromarray(cv2.cvtColor(img_yuv, cv2.COLOR_YUV2RGB))
-        
-        boxes, _ = detector.detect(img) # boxes is None or a numpy array (num_faces, 4)
-        
-        # --- START OF CORRECTION for process_face_image ---
-        if boxes is None or (isinstance(boxes, np.ndarray) and boxes.shape[0] == 0):
-            print(f"No face detected by MTCNN in {image_path}")
-            return None
-        # --- END OF CORRECTION for process_face_image ---
-        
-        # If we reach here, 'boxes' is a non-empty NumPy array.
-        # Process the first detected face
-        box = boxes[0] 
-        return extract_face(img, [int(c) for c in box]) # Pass the PIL image 'img'
-    except Exception as e: 
-        print(f"Error processing image {image_path}: {e}")
-        traceback.print_exc()
-        return None
+        boxes, _ = detector.detect(img)
+        if boxes is None or (isinstance(boxes, np.ndarray) and boxes.shape[0] == 0): return None
+        return extract_face(img, [int(c) for c in boxes[0]])
+    except: return None
 
 def identify_face(face_tensor, threshold=0.6):
     try:
         all_embs = get_all_embeddings()
         if not all_embs: return "Unknown_0"
-        
         current_emb = resnet(face_tensor).detach()
         best_match, best_score = "Unknown_0", 0.0
-        
         for name_id, ref_emb in all_embs.items():
             sim = torch.nn.functional.cosine_similarity(current_emb, ref_emb).item()
-            if sim > best_score:
-                best_score, best_match = sim, name_id
-        
+            if sim > best_score: best_score, best_match = sim, name_id
         return best_match if best_score >= threshold else "Unknown_0"
-    except Exception as e: print(f"Error identifying face: {e}"); traceback.print_exc(); return "Unknown_0"
+    except: return "Unknown_0"
 
-# --- Flask Routes ---
 @app.route('/')
-def home():
-    return redirect(url_for('attendance_page'))
+def home(): return redirect(url_for('attendance_page'))
 
 @app.route('/attendance')
 def attendance_page():
-    selected_date_str = request.args.get('date') # YYYY-MM-DD from date input
-    
-    names, rolls, times, l = extract_attendance(selected_date_str)
-    
-    # Determine display_date for the title/header and date picker value
-    if selected_date_str:
+    selected_date = request.args.get('date')
+    names, rolls, times, l = extract_attendance(selected_date)
+    display_date = datetoday2_default
+    picker_date = datetime.now(ist).strftime("%Y-%m-%d")
+    if selected_date:
         try:
-            current_display_date_obj = datetime.strptime(selected_date_str, "%Y-%m-%d")
-            display_date_formatted = current_display_date_obj.strftime("%d-%B-%Y")
-            date_for_picker = selected_date_str
-        except ValueError: # Invalid date in query
-            display_date_formatted = datetoday2_default # Fallback to today
-            date_for_picker = datetime.now(ist).strftime("%Y-%m-%d")
-    else: # No date in query, default to today
-        display_date_formatted = datetoday2_default
-        date_for_picker = datetime.now(ist).strftime("%Y-%m-%d")
+            dt_obj = datetime.strptime(selected_date, "%Y-%m-%d")
+            display_date = dt_obj.strftime("%d-%B-%Y")
+            picker_date = selected_date
+        except ValueError: pass # Keep defaults if date is invalid
+    
+    # Add today's date for the empty state check in Jinja
+    today_for_check_yyyymmdd = datetime.now(ist).strftime("%Y-%m-%d")
 
-    return render_template('attendance.html',
-                           names=names, rolls=rolls, times=times, l=l,
-                           datetoday2_display=display_date_formatted, # For panel header
-                           selected_date_for_picker=date_for_picker, # For date input value
+    return render_template('attendance.html', names=names, rolls=rolls, times=times, l=l,
+                           datetoday2_display=display_date, selected_date_for_picker=picker_date,
+                           today_date_for_check=today_for_check_yyyymmdd, # Pass this new variable
                            mess=request.args.get('mess'))
 
 @app.route('/user-management')
 def user_management_page():
     return render_template('user_management.html', totalreg=get_total_users(), datetoday2=datetoday2_default, mess=request.args.get('mess'))
 
+# --- MODIFIED /mark_attendance route ---
 @app.route('/mark_attendance', methods=['POST'])
-def mark_attendance_route(): # Renamed to avoid conflict
+def mark_attendance_route():
     try:
         data = request.json
         img_data_uri = data.get('image')
@@ -369,179 +307,139 @@ def mark_attendance_route(): # Renamed to avoid conflict
             return jsonify({'success': False, 'message': 'No image data provided'})
         
         try:
-            # Decode base64 image: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
             header, encoded = img_data_uri.split(",", 1)
             img = Image.open(BytesIO(base64.b64decode(encoded))).convert('RGB')
         except Exception as e:
-            print(f"Error decoding image: {e}")
-            traceback.print_exc()
             return jsonify({'success': False, 'message': f'Error decoding image: {str(e)}'})
         
-        try:
-            boxes, _ = detector.detect(img) # boxes is None or a numpy array (num_faces, 4)
+        boxes, _ = detector.detect(img)
+        if boxes is None or (isinstance(boxes, np.ndarray) and boxes.shape[0] == 0):
+            return jsonify({'success': False, 'message': 'No face detected in image'})
             
-            if boxes is None or (isinstance(boxes, np.ndarray) and boxes.shape[0] == 0):
-                print("No face detected by MTCNN.")
-                return jsonify({'success': False, 'message': 'No face detected in image'})
-            
-            box = boxes[0] 
-            face_tensor = extract_face(img, [int(c) for c in box]) # Pass the PIL image 'img'
-            
-            if face_tensor is None:
-                 print("Could not extract face features from detected box.")
-                 return jsonify({'success': False, 'message': 'Could not extract face features'})
+        box = boxes[0] 
+        face_tensor = extract_face(img, [int(c) for c in box])
+        if face_tensor is None:
+             return jsonify({'success': False, 'message': 'Could not extract face features'})
 
-            identity = identify_face(face_tensor)
-            name, user_id_str = identity.split('_')[0], identity.split('_')[1] 
-            
-            if name == "Unknown":
-                print(f"Unknown person detected. User ID part: {user_id_str}")
-                return jsonify({'success': False, 'message': 'Unknown person detected'})
-            
-            marked, time_marked_12hr = add_attendance(name, user_id_str) 
-            if marked:
-                return jsonify({'success': True, 'message': f'Attendance marked for {name}', 'name': name, 'user_id': user_id_str, 'time': time_marked_12hr})
-            else:
-                return jsonify({'success': False, 'message': f'Attendance already marked for {name} today'})
-        except Exception as e:
-            print(f"Error during face detection/recognition or attendance marking: {e}")
-            traceback.print_exc()
-            return jsonify({'success': False, 'message': f'Error in processing: {str(e)}'})
+        identity = identify_face(face_tensor)
+        name, user_id_str = identity.split('_')[0], identity.split('_')[1]
+        
+        if name == "Unknown":
+            return jsonify({'success': False, 'message': 'Unknown person detected'})
+        
+        # add_attendance now logs every instance
+        logged, time_logged_12hr = add_attendance(name, user_id_str) 
+        
+        if logged:
+            return jsonify({'success': True, 'message': f'Attendance logged for {name} at {time_logged_12hr}', 'name': name, 'user_id': user_id_str, 'time': time_logged_12hr})
+        else:
+            # This case is now less likely, would mean a DB insert error in add_attendance
+            return jsonify({'success': False, 'message': f'Failed to log attendance for {name}'})
             
     except Exception as e:
-        print(f"Overall error in /mark_attendance: {e}")
-        traceback.print_exc()
+        print(f"Error in /mark_attendance: {e}"); traceback.print_exc()
         return jsonify({'success': False, 'message': f'An unexpected error occurred: {str(e)}'})
+# --- END OF MODIFIED /mark_attendance route ---
 
 @app.route('/get_attendance')
 def get_attendance_route():
-    # This live update will always fetch for *today's* date.
-    # The main table display can show historical data, but live pings are for current day.
-    names, rolls, times, l = extract_attendance() # Default to today
-    return jsonify([{'name': n, 'roll': r, 'time': t} for n, r, t in zip(names, rolls, times)])
+    names, rolls, times, l = extract_attendance()
+    return jsonify([{'name': n, 'roll': r, 'time': t} for n,r,t in zip(names,rolls,times)])
 
 @app.route('/get_all_users')
-def get_users_route():
-    return jsonify({'success': True, 'users': get_all_users_from_db()})
+def get_users_route(): return jsonify({'success': True, 'users': get_all_users_from_db()})
 
 @app.route('/register_user', methods=['POST'])
 def register_user_route():
     try:
-        data = request.json
-        username, userid = data.get('username'), data.get('userid')
-        if not (username and userid): return jsonify({'success': False, 'message': 'Name and ID required'})
-        if not add_user_to_db(username, userid): return jsonify({'success': False, 'message': 'User ID exists'})
-        
-        os.makedirs(f'static/faces/{username}_{userid}', exist_ok=True)
-        os.makedirs(f'static/temp_embeddings/{username}_{userid}', exist_ok=True)
+        data = request.json; u, uid = data.get('username'), data.get('userid')
+        if not (u and uid): return jsonify({'success': False, 'message': 'Name/ID required'})
+        if not add_user_to_db(u, uid): return jsonify({'success': False, 'message': 'User ID exists'})
+        os.makedirs(f'static/faces/{u}_{uid}', exist_ok=True)
+        os.makedirs(f'static/temp_embeddings/{u}_{uid}', exist_ok=True)
         return jsonify({'success': True, 'message': 'User registered'})
-    except Exception as e: print(f"Error in /register_user: {e}"); return jsonify({'success': False, 'message': str(e)})
+    except: return jsonify({'success': False, 'message': 'Registration error'})
 
 @app.route('/delete_user', methods=['POST'])
 def delete_user_route():
     try:
-        user_id = request.json.get('user_id')
-        if not user_id: return jsonify({'success': False, 'message': 'User ID required'})
-        if delete_user_from_db(user_id):
-            return jsonify({'success': True, 'message': 'User deleted'})
-        return jsonify({'success': False, 'message': 'User not found or delete failed'})
-    except Exception as e: print(f"Error in /delete_user: {e}"); return jsonify({'success': False, 'message': str(e)})
+        uid = request.json.get('user_id')
+        if not uid: return jsonify({'success': False, 'message': 'User ID required'})
+        if delete_user_from_db(uid): return jsonify({'success': True, 'message': 'User deleted'})
+        return jsonify({'success': False, 'message': 'Delete failed'})
+    except: return jsonify({'success': False, 'message': 'Delete error'})
 
 @app.route('/capture_image', methods=['POST'])
-def capture_image_route(): # Renamed
+def capture_image_route():
     try:
-        if 'face_image' not in request.files: 
-            return jsonify({'success': False, 'message': 'No image file'})
+        if 'face_image' not in request.files: return jsonify({'success': False, 'message': 'No image'})
+        u, uid, count = request.form.get('username'), request.form.get('userid'), int(request.form.get('image_count','0'))
+        if not (u and uid): return jsonify({'success': False, 'message': 'Name/ID required'})
         
-        username, userid = request.form.get('username'), request.form.get('userid')
-        img_count = int(request.form.get('image_count', '0')) # Renamed from image_count to img_count
-        
-        if not (username and userid): 
-            return jsonify({'success': False, 'message': 'Username and user ID are required'})
-        
-        img_file = request.files['face_image'] # Renamed from image_file to img_file
-        user_dir = f'static/faces/{username}_{userid}' # Renamed from userdir to user_dir
-        os.makedirs(user_dir, exist_ok=True)
-        img_path = os.path.join(user_dir, f'{username}_{img_count}.jpg') # Renamed from image_path to img_path
+        img_file = request.files['face_image']
+        img_path = os.path.join(f'static/faces/{u}_{uid}', f'{u}_{count}.jpg')
+        os.makedirs(os.path.dirname(img_path), exist_ok=True)
         img_file.save(img_path)
         
-        face_tensor = process_face_image(img_path) # This function now has the fix
-        if face_tensor is None:
+        tensor = process_face_image(img_path)
+        if tensor is None:
             if os.path.exists(img_path): os.remove(img_path)
-            return jsonify({'success': False, 'message': 'No face detected in the image'})
+            return jsonify({'success': False, 'message': 'No face detected'})
         
-        emb = resnet(face_tensor).detach() # Renamed from embedding to emb
-        
-        temp_emb_dir = f'static/temp_embeddings/{username}_{userid}' # Renamed from temp_embedding_dir to temp_emb_dir
-        os.makedirs(temp_emb_dir, exist_ok=True)
-        torch.save(emb, os.path.join(temp_emb_dir, f'embedding_{img_count}.pt'))
-        
+        emb_path = os.path.join(f'static/temp_embeddings/{u}_{uid}', f'embedding_{count}.pt')
+        os.makedirs(os.path.dirname(emb_path), exist_ok=True)
+        torch.save(resnet(tensor).detach(), emb_path)
         return jsonify({'success': True, 'message': 'Image saved'})
-    except Exception as e: 
-        print(f"Error in /capture_image: {e}")
-        traceback.print_exc()
-        return jsonify({'success': False, 'message': str(e)})
-    
+    except Exception as e: print(f"Capture error: {e}"); traceback.print_exc(); return jsonify({'success': False, 'message': str(e)})
     
 @app.route('/export_attendance')
 def export_attendance_route():
     try:
-        export_date_str = request.args.get('date') # YYYY-MM-DD
-        
-        # Determine filename based on whether a specific date is requested or today's
-        filename_date_part = export_date_str if export_date_str else datetime.now(ist).strftime("%Y-%m-%d")
-        
-        names, rolls, times, l = extract_attendance(export_date_str) # times are already 12hr formatted
-        
+        date_str = request.args.get('date')
+        fname_date = date_str or datetime.now(ist).strftime("%Y-%m-%d")
+        names, rolls, times, l = extract_attendance(date_str)
         if l == 0:
-            flash_message = f"No attendance records found for {datetime.strptime(filename_date_part, '%Y-%m-%d').strftime('%d-%B-%Y')}."
-            return redirect(url_for('attendance_page', mess=flash_message, date=export_date_str if export_date_str else ''))
-
-        output = BytesIO()
-        # Use consistent timezone info in CSV header
-        output.write('Name,ID,Time (IST)\n'.encode('utf-8'))
-        for i in range(l):
-            output.write(f'{names[i]},{rolls[i]},{times[i]}\n'.encode('utf-8'))
-        output.seek(0)
+            return redirect(url_for('attendance_page', mess=f"No records for {datetime.strptime(fname_date, '%Y-%m-%d').strftime('%d-%B-%Y')}.", date=date_str or ''))
         
-        return send_file(output, mimetype='text/csv', as_attachment=True, download_name=f"attendance_{filename_date_part}.csv")
-    except Exception as e: print(f"Error in /export_attendance: {e}"); traceback.print_exc(); return jsonify({'success': False, 'message': str(e)})
+        out = BytesIO()
+        out.write('Name,ID,Time (IST)\n'.encode())
+        for i in range(l): out.write(f'{names[i]},{rolls[i]},{times[i]}\n'.encode())
+        out.seek(0)
+        return send_file(out, mimetype='text/csv', as_attachment=True, download_name=f"attendance_{fname_date}.csv")
+    except: return jsonify({'success': False, 'message': 'Export error'})
     
 @app.route('/get_attendance_history', methods=['POST'])
 def get_attendance_history_route():
     try:
-        user_id = request.json.get('user_id')
-        if not user_id: return jsonify({'success': False, 'message': 'User ID required'})
+        uid = request.json.get('user_id')
+        if not uid: return jsonify({'success': False, 'message': 'User ID required'})
         with get_db_connection() as conn:
-            cursor = conn.cursor()
-            # Fetch raw time, format later
-            cursor.execute("SELECT date, time FROM attendance WHERE user_id = ? ORDER BY date DESC, time DESC LIMIT 30", (user_id,))
-            history = [{'date': r[0], 'time': format_time_to_12hr(r[1])} for r in cursor.fetchall()]
-            return jsonify({'success': True, 'history': history})
-    except Exception as e: print(f"Error in /get_attendance_history: {e}"); return jsonify({'success': False, 'message': str(e)})
+            hist = [{'date': r[0], 'time': format_time_to_12hr(r[1])} for r in 
+                    conn.cursor().execute("SELECT date, time FROM attendance WHERE user_id = ? ORDER BY date DESC, time DESC LIMIT 30", (uid,)).fetchall()]
+            return jsonify({'success': True, 'history': hist})
+    except: return jsonify({'success': False, 'message': 'History error'})
 
 @app.route('/complete_registration', methods=['POST'])
 def complete_registration_route():
     try:
-        username, userid = request.json.get('username'), request.json.get('userid')
-        if not (username and userid): return jsonify({'success': False, 'message': 'Name and ID required'})
+        u, uid = request.json.get('username'), request.json.get('userid')
+        if not (u and uid): return jsonify({'success': False, 'message': 'Name/ID required'})
         
-        temp_emb_dir = f'static/temp_embeddings/{username}_{userid}'
-        if not os.path.exists(temp_emb_dir): return jsonify({'success': False, 'message': 'No embeddings found'})
+        temp_dir = f'static/temp_embeddings/{u}_{uid}'
+        if not os.path.exists(temp_dir): return jsonify({'success': False, 'message': 'No embeddings'})
         
-        emb_files = [f for f in os.listdir(temp_emb_dir) if f.endswith('.pt')]
-        if not emb_files: return jsonify({'success': False, 'message': 'No valid embeddings'})
+        files = [f for f in os.listdir(temp_dir) if f.endswith('.pt')]
+        if not files: return jsonify({'success': False, 'message': 'No valid embeddings'})
             
-        all_embs = [torch.load(os.path.join(temp_emb_dir, f)).to(device) for f in emb_files]
-        if not all_embs: return jsonify({'success': False, 'message': 'Failed to load embeddings'})
+        embs = [torch.load(os.path.join(temp_dir, f)).to(device) for f in files]
+        if not embs: return jsonify({'success': False, 'message': 'Load embeddings failed'})
 
-        avg_emb = torch.mean(torch.cat(all_embs, dim=0), dim=0, keepdim=True)
-        
-        if save_embedding(userid, avg_emb):
-            shutil.rmtree(temp_emb_dir, ignore_errors=True)
+        avg_emb = torch.mean(torch.cat(embs, dim=0), dim=0, keepdim=True)
+        if save_embedding(uid, avg_emb):
+            shutil.rmtree(temp_dir, ignore_errors=True)
             return jsonify({'success': True, 'message': 'Registration completed'})
-        return jsonify({'success': False, 'message': 'Failed to save embeddings'})
-    except Exception as e: print(f"Error in /complete_registration: {e}"); traceback.print_exc(); return jsonify({'success': False, 'message': str(e)})
+        return jsonify({'success': False, 'message': 'Save embeddings failed'})
+    except: return jsonify({'success': False, 'message': 'Completion error'})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000, ssl_context=('/home/ayyappa/Documents/FaceRec-attendance/ssl/cert.pem', '/home/ayyappa/Documents/FaceRec-attendance/ssl/key.pem'))

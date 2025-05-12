@@ -13,26 +13,21 @@
 {% block adminpage %}
 <html lang="en">
   <head>
-    <!-- Include the same head content as index.html: meta, title, style imports -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Say Cheese! - Attendance</title>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
-      /* PASTE THE ENTIRE <style> BLOCK FROM index.html HERE */
       @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Kalam:wght@300;400;700&family=Indie+Flower&display=swap');
     
     * {
         box-sizing: border-box;
     }
     
-    body { /* Body styles are in navbar_logout.html, this is fine */
+    body { 
         font-family: 'Architects Daughter', cursive;
-        /* background-color: #faf9f5; */ /* Defined in base */
         color: #000;
-        /* margin: 0; */ /* Defined in base */
-        /* padding: 0; */ /* Defined in base */
         overflow-x: hidden;
         line-height: 1.6;
         font-size: 16px;
@@ -87,9 +82,9 @@
 
     .main-title {
         font-family: 'Kalam', cursive;
-        font-size: 3.5rem; /* Slightly smaller if at very top */
+        font-size: 3.5rem; 
         text-align: center;
-        margin: 1rem 0 0.5rem 0; /* Adjusted margin for top position */
+        margin: 1rem 0 0.5rem 0; 
         position: relative;
         color: #000;
         text-shadow: 3px 3px 0 #fff;
@@ -764,9 +759,6 @@
         opacity: 1;
     }
     
-    /* Navbar and Logo styles are now primarily in navbar_logout.html */
-    /* Removed redundant .navbar and .logo styles from here */
-
     .camera-loading {
         text-align: center;
         margin: 20px 0;
@@ -923,9 +915,6 @@
         border: 2px solid #ffeeba;
         border-radius: 10px;
     }
-    
-    /* .navigation-buttons was removed from here */
-
 
     @media (max-width: 768px) {
         .two-column-layout {
@@ -939,7 +928,7 @@
         }
         
         .main-title {
-            font-size: 2.5rem; /* Adjusted for mobile if at very top */
+            font-size: 2.5rem; 
         }
         
         .btn {
@@ -979,7 +968,6 @@
 <body>
 
 <div class="container">
-    <!-- Removed .navigation-buttons div, button moved to navbar_actions block -->
 
     {% if mess %}
     <div style="text-align: center; margin-bottom: 25px;">
@@ -1020,9 +1008,16 @@
         <div class="sketchy-box panel panel-left"> 
             <div class="panel-header">
                 <i class="material-icons icon">assignment</i>
-                <h2>Today's Roll Call <small>({{ datetoday2 }})</small></h2>
+                <h2>Roll Call for <small>({{ datetoday2_display }})</small></h2>
             </div>
             <div class="panel-body">
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <label for="attendance-date-picker" style="font-family: 'Kalam', cursive; font-size: 1.2rem; margin-right: 10px;">View Attendance For:</label>
+                    <input type="date" id="attendance-date-picker" name="attendance-date"
+                           value="{{ selected_date_for_picker }}"
+                           style="padding: 8px; border: 2px solid #000; border-radius: 8px; font-family: 'Architects Daughter', cursive; font-size: 1.1rem;">
+                </div>
+
                 <button id="toggle-camera-btn" class="btn btn-blue btn-pulse">
                     <i class="material-icons" style="font-size: 22px; margin-right: 8px;">camera_alt</i>
                     Smile for Attendance!
@@ -1049,21 +1044,26 @@
                     {% else %}
                     <div class="empty-state">
                         <div class="empty-state-icon">📝</div>
-                        <div class="empty-state-text">No attendance records yet for today!</div>
-                        <div>Click "Smile for Attendance" to get started</div>
+                        <div class="empty-state-text">No attendance records for {{ datetoday2_display }}!</div>
+                        {% if selected_date_for_picker == today_date_for_check %} <!-- Assuming you pass today's YYYY-MM-DD date for this check -->
+                            <div>Click "Smile for Attendance" to get started for today.</div>
+                        {% else %}
+                            <div>Select another date or check back later.</div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
                 
                 <button id="export-attendance-btn" class="btn btn-blue" style="margin-top: 15px;">
                     <i class="material-icons" style="font-size: 22px; margin-right: 8px;">download</i>
-                    Export Attendance
+                    Export Attendance for {{ datetoday2_display }}
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- MODALS (Registration, ManageUsers, Confirm, AttendanceHistory) remain the same as before -->
 <div id="registrationModal" class="modal">
     <div class="modal-content sketchy-box">
         <div class="modal-header">
@@ -1224,8 +1224,8 @@
         }
 
         const regModal = document.getElementById("registrationModal");
-        const regModalBtn = document.getElementById("openModalBtn"); // This button is on user_management.html
-        if (regModalBtn) { // Will only be true on user_management.html
+        const regModalBtn = document.getElementById("openModalBtn"); 
+        if (regModalBtn) { 
             regModalBtn.onclick = function() {
                 if(regModal) regModal.style.display = "block";
             }
@@ -1250,8 +1250,8 @@
         }
         
         const manageModal = document.getElementById("manageUsersModal");
-        const manageModalBtn = document.getElementById("openManageUsersBtn"); // This button is on user_management.html
-        if (manageModalBtn) { // Will only be true on user_management.html
+        const manageModalBtn = document.getElementById("openManageUsersBtn"); 
+        if (manageModalBtn) { 
             manageModalBtn.onclick = function() {
                 if(manageModal) manageModal.style.display = "block";
                 if (typeof loadUserList === "function") loadUserList();
@@ -1317,6 +1317,20 @@
         const recognizedUser = document.getElementById("recognized-user");
         const videoStream = document.getElementById("video-stream");
         const exportAttendanceBtn = document.getElementById("export-attendance-btn");
+        const datePicker = document.getElementById('attendance-date-picker'); // New
+
+        if (datePicker) {
+            datePicker.addEventListener('change', function() {
+                const selectedDate = this.value; // YYYY-MM-DD
+                if (selectedDate) {
+                    window.location.href = `/attendance?date=${selectedDate}`;
+                } else {
+                    // If date is cleared, go to today's attendance
+                    window.location.href = '/attendance';
+                }
+            });
+        }
+
 
         let isStreamActive = false;
         let attendanceCheckInterval = null;
@@ -1347,7 +1361,12 @@
 
         if (exportAttendanceBtn) {
             exportAttendanceBtn.addEventListener("click", function() {
-                window.location.href = "/export_attendance";
+                const currentDateSelected = datePicker ? datePicker.value : null;
+                let exportUrl = "/export_attendance";
+                if (currentDateSelected) {
+                    exportUrl += `?date=${currentDateSelected}`;
+                }
+                window.location.href = exportUrl;
             });
         }
         
@@ -1513,7 +1532,12 @@
                             if (funMessage) funMessage.classList.remove("show");
                             recognizedUser.classList.remove("show");
                         }, 3000);
-                        if (typeof refreshAttendance === "function") refreshAttendance();
+                        // Only refresh if viewing today's attendance
+                        const currentSelectedDate = datePicker ? datePicker.value : null;
+                        const todayDateStr = new Date().toISOString().split('T')[0];
+                        if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
+                            if (typeof refreshAttendance === "function") refreshAttendance();
+                        }
                     } else if (data.message === "Unknown person detected") {
                         recognizedUser.textContent = "I don't recognize you! 🤔";
                         setTimeout(() => { recognizedUser.classList.remove("show"); }, 2000);
@@ -1567,7 +1591,7 @@
         let userId = null;
         let userName = null;
         let imageCount = 0;
-        const requiredImages = 5; // CHANGED FROM 10 to 5
+        const requiredImages = 5; 
         let stream = null; 
 
         function loadUserList() {
@@ -2106,7 +2130,7 @@
             }
             if (thumbnailContainer) {
                 thumbnailContainer.innerHTML = "";
-                for (let i = 0; i < requiredImages; i++) { // requiredImages is now 5
+                for (let i = 0; i < requiredImages; i++) { 
                     const placeholder = document.createElement("div");
                     placeholder.className = "thumbnail-placeholder"; placeholder.textContent = i + 1;
                     thumbnailContainer.appendChild(placeholder);
@@ -2115,22 +2139,35 @@
         }
 
         function refreshAttendance() {
-            fetch('/get_attendance')
-                .then(response => response.json())
-                .then(data => {
-                    if (typeof updateAttendanceTable === "function") updateAttendanceTable(data);
-                })
-                .catch(error => console.error("Error refreshing attendance:", error));
+            // Only refresh if viewing today's attendance
+            const currentSelectedDate = datePicker ? datePicker.value : null;
+            const todayDateStr = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+            if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
+                fetch('/get_attendance') // This endpoint always returns today's attendance
+                    .then(response => response.json())
+                    .then(data => {
+                        if (typeof updateAttendanceTable === "function") updateAttendanceTable(data);
+                    })
+                    .catch(error => console.error("Error refreshing attendance:", error));
+            }
         }
 
         function updateAttendanceTable(data) {
             const tableContainer = document.getElementById('attendance-table-container');
             if (!tableContainer) return;
             
-            const existingRowsCount = tableContainer.querySelectorAll("table tr").length -1; // -1 for header, or 0 if no table
+            const existingRowsCount = tableContainer.querySelectorAll("table tr").length -1; 
 
             if (data.length === 0) {
-                tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No attendance records yet for today!</div><div>Click "Smile for Attendance" to get started</div></div>`;
+                // Message will be handled by Jinja based on selected_date_for_picker
+                // For live updates, if today's attendance becomes 0, it will show the "No records for today"
+                // This is fine, as the Jinja part handles the initial "No records for selected date"
+                const currentSelectedDate = datePicker ? datePicker.value : null;
+                const todayDateStr = new Date().toISOString().split('T')[0];
+                if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
+                    tableContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No attendance records yet for today!</div><div>Click "Smile for Attendance" to get started</div></div>`;
+                }
                 return;
             }
             let tableHtml = `<table class="sketchy-table"><tr><th>#</th><th>Name</th><th>ID</th><th>Time (IST)</th></tr>`;
@@ -2165,9 +2202,14 @@
                 }, 4000);
             }
             
-            if (document.getElementById('attendance-table-container')) { // Only on attendance page
-                 setInterval(refreshAttendance, 10000);
-                 refreshAttendance(); 
+            // Refresh attendance only if on attendance page and viewing today's date
+            if (document.getElementById('attendance-table-container')) {
+                const currentSelectedDate = datePicker ? datePicker.value : null;
+                const todayDateStr = new Date().toISOString().split('T')[0];
+                if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
+                    setInterval(refreshAttendance, 10000);
+                    // Initial load of attendance is handled by Jinja rendering
+                }
             }
         });
 

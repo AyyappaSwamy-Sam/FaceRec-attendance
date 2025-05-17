@@ -82,22 +82,22 @@
 
     .main-title {
         font-family: 'Kalam', cursive;
-        font-size: 3.5rem; /* Slightly smaller if at very top */
+        font-size: 3.5rem; 
         text-align: center;
-        margin: 1rem 0 0.5rem 0; /* Adjusted margin for top position */
+        margin: 1rem 0 0.5rem 0; 
         position: relative;
         color: #000;
         text-shadow: 3px 3px 0 #fff;
         transform: rotate(-1deg);
-        animation: bobble 3s infinite;
+        /* animation: bobble 3s infinite; */ /* REMOVED BOBBLE ANIMATION */
         font-weight: 700;
     }
     
-    @keyframes bobble {
+    /* @keyframes bobble { REMOVED BOBBLE KEYFRAMES
         0% { transform: rotate(-1deg); }
         50% { transform: rotate(1deg); }
         100% { transform: rotate(-1deg); }
-    }
+    } */
 
     .panel {
         margin-bottom: 40px;
@@ -263,6 +263,7 @@
         border: 2px solid #000;
         padding: 12px 15px;
         position: relative;
+        vertical-align: middle; /* Added for image alignment */
     }
     
     .sketchy-table th {
@@ -298,6 +299,15 @@
     
     .sketchy-table tr:hover {
         background-color: #f0e9e0;
+    }
+
+    .user-image-thumbnail { /* New style for user image in table */
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #555;
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
     }
 
     .form-group {
@@ -759,9 +769,6 @@
         opacity: 1;
     }
     
-    /* Navbar and Logo styles are now primarily in navbar_logout.html */
-    /* Removed redundant .navbar and .logo styles from here */
-
     .camera-loading {
         text-align: center;
         margin: 20px 0;
@@ -918,8 +925,6 @@
         border: 2px solid #ffeeba;
         border-radius: 10px;
     }
-
-    /* .navigation-buttons was removed from here */
     
 
     @media (max-width: 768px) {
@@ -934,7 +939,7 @@
         }
         
         .main-title {
-            font-size: 2.5rem; /* Adjusted for mobile if at very top */
+            font-size: 2.5rem; 
         }
         
         .btn {
@@ -974,7 +979,6 @@
 <body>
 
 <div class="container">
-    <!-- Removed .navigation-buttons div, button moved to navbar_actions block -->
 
     {% if mess %}
     <div style="text-align: center; margin-bottom: 25px;">
@@ -1160,7 +1164,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const secureContextWarning = document.getElementById('secure-context-warning'); // This ID is not on this page, but check is harmless
+        const secureContextWarning = document.getElementById('secure-context-warning'); 
         if (secureContextWarning && window.isSecureContext === false) {
             secureContextWarning.style.display = 'block';
         }
@@ -1252,12 +1256,9 @@
         const cameraLoading = document.getElementById("camera-loading"); 
 
 
-        // --- ATTENDANCE PAGE SPECIFIC ELEMENTS (will be null here, so related JS won't run) ---
         const videoStreamWrapper = document.getElementById("video-stream-wrapper");
         const toggleCameraBtn = document.getElementById("toggle-camera-btn");
-        // ... and other attendance specific elements ...
 
-        // --- REGISTRATION AND USER MANAGEMENT RELATED ---
         const funMessages = [
             "Taking attendance has never been this fun! 🎉", "Smile! You're on candid camera! 📸",
             "Your face is your password! 😊", "No more taking roll calls the boring way!",
@@ -1295,7 +1296,7 @@
         let userId = null;
         let userName = null;
         let imageCount = 0;
-        const requiredImages = 5; // CHANGED FROM 10 to 5
+        const requiredImages = 5; 
         let stream = null; 
 
         function loadUserList() {
@@ -1320,9 +1321,15 @@
                             }
                             return;
                         }
-                        let html = `<table class="sketchy-table"><tr><th>Name</th><th>ID</th><th>Joined</th><th>Actions</th></tr>`;
+                        // --- MODIFIED TABLE HEADER FOR IMAGE ---
+                        let html = `<table class="sketchy-table"><tr><th>Image</th><th>Name</th><th>ID</th><th>Joined</th><th>Actions</th></tr>`;
                         users.forEach(user => {
-                            html += `<tr><td>${user.name}</td><td>${user.user_id}</td><td>${user.registration_date}</td><td><button class="btn view-history-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem; margin-right: 8px; background-color: #e0f7fa; color: #006064; border-color: #006064;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">history</i>History</button><button class="btn btn-red delete-user-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">delete</i>Remove</button></td></tr>`;
+                            // --- ADDED IMAGE CELL ---
+                            let imageCell = '<td>-</td>'; // Default if no image
+                            if (user.image_url) {
+                                imageCell = `<td><img src="${user.image_url}" alt="${user.name}" class="user-image-thumbnail"></td>`;
+                            }
+                            html += `<tr>${imageCell}<td>${user.name}</td><td>${user.user_id}</td><td>${user.registration_date}</td><td><button class="btn view-history-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem; margin-right: 8px; background-color: #e0f7fa; color: #006064; border-color: #006064;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">history</i>History</button><button class="btn btn-red delete-user-btn" data-user-id="${user.user_id}" data-user-name="${user.name}" style="padding: 8px 12px; font-size: 1rem;"><i class="material-icons" style="font-size: 18px; margin-right: 5px; vertical-align: middle;">delete</i>Remove</button></td></tr>`;
                         });
                         html += `</table>`;
                         container.innerHTML = html;
@@ -1644,7 +1651,7 @@
                         const thumbnail = document.createElement("img");
                         thumbnail.src = URL.createObjectURL(blob);
                         thumbnail.classList.add("thumbnail", "captured");
-                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
+                        if (typeof updateThumbnail === "function") updateThumbnail(thumbnail); 
                         imageCount++;
                         if (typeof updateProgress === "function") updateProgress();
                         capBtn.disabled = false; capBtn.innerHTML = originalText;
@@ -1694,10 +1701,18 @@
             let processedCount = 0, successCount = 0, failureCount = 0;
             for (let i = 0; i < filesToProcess; i++) {
                 const file = files[i];
-                if (!file.type.startsWith('image/')) { processedCount++; failureCount++; if (processedCount === filesToProcess && typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText); continue; }
+                if (!file.type.startsWith('image/')) { 
+                    processedCount++; 
+                    failureCount++; 
+                    if (processedCount === filesToProcess && typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
+                    continue; 
+                }
                 const formData = new FormData();
                 formData.append("face_image", file); formData.append("username", userName);
-                formData.append("userid", userId); formData.append("image_count", imageCount + successCount);
+                formData.append("userid", userId); 
+                formData.append("image_count", imageCount + successCount); 
                 formData.append("source", "upload");
                 
                 fetch("/capture_image", { method: "POST", body: formData })
@@ -1709,15 +1724,24 @@
                         const thumbnail = document.createElement("img");
                         thumbnail.src = URL.createObjectURL(file);
                         thumbnail.classList.add("thumbnail", "uploaded");
-                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
-                        imageCount++;
+                        if (typeof updateThumbnail === "function") updateThumbnail(thumbnail); 
+                        imageCount++; 
                         if (typeof updateProgress === "function") updateProgress();
-                    } else { failureCount++; console.error("Error processing image:", data.message); }
-                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    } else { 
+                        failureCount++; 
+                        console.error("Error processing image:", data.message); 
+                    }
+                    if (typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
                 })
                 .catch(error => {
-                    console.error("Error:", error); processedCount++; failureCount++;
-                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    console.error("Error:", error); 
+                    processedCount++; 
+                    failureCount++;
+                    if (typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
                 });
             }
         }
@@ -1758,14 +1782,15 @@
             }
         }
         
-        function updateThumbnail(index, thumbnail) {
+        function updateThumbnail(thumbnailElement) {
             const thumbnailContainer = document.getElementById("image-thumbnails");
             if (!thumbnailContainer) return;
             const placeholders = thumbnailContainer.getElementsByClassName("thumbnail-placeholder");
-            if (index < placeholders.length && placeholders[0]) { 
-                thumbnailContainer.replaceChild(thumbnail, placeholders[0]);
-            } else if (placeholders.length === 0) { 
-                thumbnailContainer.appendChild(thumbnail);
+            if (placeholders.length > 0) {
+                thumbnailContainer.replaceChild(thumbnailElement, placeholders[0]);
+            } else {
+                thumbnailContainer.appendChild(thumbnailElement);
+                console.warn("Appended thumbnail as no placeholders were found.");
             }
         }
         
@@ -1834,7 +1859,7 @@
             }
             if (thumbnailContainer) {
                 thumbnailContainer.innerHTML = "";
-                for (let i = 0; i < requiredImages; i++) { // requiredImages is now 5
+                for (let i = 0; i < requiredImages; i++) { 
                     const placeholder = document.createElement("div");
                     placeholder.className = "thumbnail-placeholder"; placeholder.textContent = i + 1;
                     thumbnailContainer.appendChild(placeholder);

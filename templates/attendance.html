@@ -1,5 +1,6 @@
 {% extends 'navbar_logout.html' %}
 
+
 {% block page_title %}
     <h1 class="main-title">Say Cheese! <span style="font-size: 0.8em;">Attendance Made Fun <span class="smile-icon">😊</span></span></h1>
 {% endblock page_title %}
@@ -89,15 +90,15 @@
         color: #000;
         text-shadow: 3px 3px 0 #fff;
         transform: rotate(-1deg);
-        animation: bobble 3s infinite;
+        /* animation: bobble 3s infinite; */ /* REMOVED BOBBLE ANIMATION */
         font-weight: 700;
     }
     
-    @keyframes bobble {
+    /* @keyframes bobble { REMOVED BOBBLE KEYFRAMES
         0% { transform: rotate(-1deg); }
         50% { transform: rotate(1deg); }
         100% { transform: rotate(-1deg); }
-    }
+    } */
 
     .panel {
         margin-bottom: 40px;
@@ -1045,7 +1046,7 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">📝</div>
                         <div class="empty-state-text">No attendance records for {{ datetoday2_display }}!</div>
-                        {% if selected_date_for_picker == today_date_for_check %} <!-- Assuming you pass today's YYYY-MM-DD date for this check -->
+                        {% if selected_date_for_picker == today_date_for_check %} 
                             <div>Click "Smile for Attendance" to get started for today.</div>
                         {% else %}
                             <div>Select another date or check back later.</div>
@@ -1317,15 +1318,14 @@
         const recognizedUser = document.getElementById("recognized-user");
         const videoStream = document.getElementById("video-stream");
         const exportAttendanceBtn = document.getElementById("export-attendance-btn");
-        const datePicker = document.getElementById('attendance-date-picker'); // New
+        const datePicker = document.getElementById('attendance-date-picker'); 
 
         if (datePicker) {
             datePicker.addEventListener('change', function() {
-                const selectedDate = this.value; // YYYY-MM-DD
+                const selectedDate = this.value; 
                 if (selectedDate) {
                     window.location.href = `/attendance?date=${selectedDate}`;
                 } else {
-                    // If date is cleared, go to today's attendance
                     window.location.href = '/attendance';
                 }
             });
@@ -1523,21 +1523,23 @@
             .then(data => {
                 if (recognizedUser) {
                     if (data.success) {
-                        recognizedUser.textContent = `Hello, ${data.name}!`;
+                        recognizedUser.textContent = `Hello, ${data.name}! Logged at ${data.time}`;
                         if (funMessage) {
-                            funMessage.textContent = `Attendance marked for ${data.name}! 🎉`;
+                            funMessage.textContent = `Attendance logged for ${data.name}! 🎉`;
                             funMessage.classList.add("show");
                         }
                         setTimeout(() => {
                             if (funMessage) funMessage.classList.remove("show");
                             recognizedUser.classList.remove("show");
                         }, 3000);
-                        // Only refresh if viewing today's attendance
                         const currentSelectedDate = datePicker ? datePicker.value : null;
                         const todayDateStr = new Date().toISOString().split('T')[0];
                         if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
                             if (typeof refreshAttendance === "function") refreshAttendance();
                         }
+                    } else if (data.message === "COOLDOWN") {
+                        recognizedUser.textContent = "Already logged recently. Try again in a bit!";
+                         setTimeout(() => { recognizedUser.classList.remove("show"); }, 2500);
                     } else if (data.message === "Unknown person detected") {
                         recognizedUser.textContent = "I don't recognize you! 🤔";
                         setTimeout(() => { recognizedUser.classList.remove("show"); }, 2000);
@@ -1940,7 +1942,7 @@
                         const thumbnail = document.createElement("img");
                         thumbnail.src = URL.createObjectURL(blob);
                         thumbnail.classList.add("thumbnail", "captured");
-                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
+                        if (typeof updateThumbnail === "function") updateThumbnail(thumbnail); // Pass only thumbnail
                         imageCount++;
                         if (typeof updateProgress === "function") updateProgress();
                         capBtn.disabled = false; capBtn.innerHTML = originalText;
@@ -1990,10 +1992,20 @@
             let processedCount = 0, successCount = 0, failureCount = 0;
             for (let i = 0; i < filesToProcess; i++) {
                 const file = files[i];
-                if (!file.type.startsWith('image/')) { processedCount++; failureCount++; if (processedCount === filesToProcess && typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText); continue; }
+                if (!file.type.startsWith('image/')) { 
+                    processedCount++; 
+                    failureCount++; 
+                    if (processedCount === filesToProcess && typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
+                    continue; 
+                }
                 const formData = new FormData();
                 formData.append("face_image", file); formData.append("username", userName);
-                formData.append("userid", userId); formData.append("image_count", imageCount + successCount);
+                formData.append("userid", userId); 
+                // image_count for server is the current global imageCount + how many successes in this batch so far
+                // This ensures unique server-side filenames if multiple uploads are processed "concurrently" by server
+                formData.append("image_count", imageCount + successCount); 
                 formData.append("source", "upload");
                 
                 fetch("/capture_image", { method: "POST", body: formData })
@@ -2005,15 +2017,24 @@
                         const thumbnail = document.createElement("img");
                         thumbnail.src = URL.createObjectURL(file);
                         thumbnail.classList.add("thumbnail", "uploaded");
-                        if (typeof updateThumbnail === "function") updateThumbnail(imageCount, thumbnail);
-                        imageCount++;
+                        if (typeof updateThumbnail === "function") updateThumbnail(thumbnail); // Pass only thumbnail
+                        imageCount++; // Increment global imageCount for each success
                         if (typeof updateProgress === "function") updateProgress();
-                    } else { failureCount++; console.error("Error processing image:", data.message); }
-                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    } else { 
+                        failureCount++; 
+                        console.error("Error processing image:", data.message); 
+                    }
+                    if (typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
                 })
                 .catch(error => {
-                    console.error("Error:", error); processedCount++; failureCount++;
-                    if (typeof checkProcessingComplete === "function") checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    console.error("Error:", error); 
+                    processedCount++; 
+                    failureCount++;
+                    if (typeof checkProcessingComplete === "function") {
+                        checkProcessingComplete(processedCount, filesToProcess, successCount, failureCount, uploadBtn, originalBtnText);
+                    }
                 });
             }
         }
@@ -2054,14 +2075,17 @@
             }
         }
         
-        function updateThumbnail(index, thumbnail) {
+        // Corrected updateThumbnail function
+        function updateThumbnail(thumbnailElement) {
             const thumbnailContainer = document.getElementById("image-thumbnails");
             if (!thumbnailContainer) return;
             const placeholders = thumbnailContainer.getElementsByClassName("thumbnail-placeholder");
-            if (index < placeholders.length && placeholders[0]) { 
-                thumbnailContainer.replaceChild(thumbnail, placeholders[0]);
-            } else if (placeholders.length === 0) { 
-                thumbnailContainer.appendChild(thumbnail);
+            if (placeholders.length > 0) {
+                thumbnailContainer.replaceChild(thumbnailElement, placeholders[0]);
+            } else {
+                // Fallback if no placeholders are left (should not happen with correct logic)
+                thumbnailContainer.appendChild(thumbnailElement);
+                console.warn("Appended thumbnail as no placeholders were found. Check logic if this occurs frequently.");
             }
         }
         
@@ -2139,12 +2163,11 @@
         }
 
         function refreshAttendance() {
-            // Only refresh if viewing today's attendance
             const currentSelectedDate = datePicker ? datePicker.value : null;
-            const todayDateStr = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            const todayDateStr = new Date().toISOString().split('T')[0]; 
 
             if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
-                fetch('/get_attendance') // This endpoint always returns today's attendance
+                fetch('/get_attendance') 
                     .then(response => response.json())
                     .then(data => {
                         if (typeof updateAttendanceTable === "function") updateAttendanceTable(data);
@@ -2160,9 +2183,6 @@
             const existingRowsCount = tableContainer.querySelectorAll("table tr").length -1; 
 
             if (data.length === 0) {
-                // Message will be handled by Jinja based on selected_date_for_picker
-                // For live updates, if today's attendance becomes 0, it will show the "No records for today"
-                // This is fine, as the Jinja part handles the initial "No records for selected date"
                 const currentSelectedDate = datePicker ? datePicker.value : null;
                 const todayDateStr = new Date().toISOString().split('T')[0];
                 if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
@@ -2202,13 +2222,11 @@
                 }, 4000);
             }
             
-            // Refresh attendance only if on attendance page and viewing today's date
             if (document.getElementById('attendance-table-container')) {
                 const currentSelectedDate = datePicker ? datePicker.value : null;
                 const todayDateStr = new Date().toISOString().split('T')[0];
                 if (!currentSelectedDate || currentSelectedDate === todayDateStr) {
                     setInterval(refreshAttendance, 10000);
-                    // Initial load of attendance is handled by Jinja rendering
                 }
             }
         });

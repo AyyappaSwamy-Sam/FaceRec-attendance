@@ -43,7 +43,6 @@ os.makedirs('static/embeddings', exist_ok=True)
 os.makedirs('static/images', exist_ok=True) 
 os.makedirs('static/temp_embeddings', exist_ok=True)
 
-# Ensure today's attendance file exists (for CSV fallback)
 if f'Attendance-{datetoday}.csv' not in os.listdir('Attendance'):
     with open(f'Attendance/Attendance-{datetoday}.csv', 'w') as f:
         f.write('Name,Roll,Time\n')
@@ -53,7 +52,7 @@ def get_db_connection():
     conn = None
     try:
         conn = sqlite3.connect('face_attendance.db', timeout=30.0)
-        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA foreign_keys = ON;") # ENABLE FOREIGN KEY ENFORCEMENT
         yield conn
     except Exception as e:
         print(f"Database connection error: {e}")
@@ -144,13 +143,42 @@ def get_total_users():
     try: return execute_with_retry(_get)
     except: return 0
 
+# --- MODIFIED get_all_users_from_db ---
 def get_all_users_from_db():
-    def _get():
+    def _get_users():
         with get_db_connection() as conn:
-            return [{'name': r[0], 'user_id': r[1], 'registration_date': r[2]} 
-                    for r in conn.cursor().execute("SELECT name, user_id, registration_date FROM users ORDER BY name").fetchall()]
-    try: return execute_with_retry(_get)
-    except: return []
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, user_id, registration_date FROM users ORDER BY name")
+            users_data = []
+            for row in cursor.fetchall():
+                name, user_id, reg_date = row[0], row[1], row[2]
+                # Construct the path to the first registration image (USERNAME_0.jpg)
+                # Ensure USERNAME part of path is safe (e.g. no slashes if username could contain them)
+                # For simplicity, assuming username is simple.
+                first_image_filename = f"{name}_0.jpg"
+                first_image_path_relative = f"static/faces/{name}_{user_id}/{first_image_filename}"
+                
+                # Check if the image actually exists
+                if os.path.exists(first_image_path_relative):
+                    # Pass the URL path for the template
+                    image_url = url_for('static', filename=f'faces/{name}_{user_id}/{first_image_filename}')
+                else:
+                    image_url = None # Or a placeholder image URL
+
+                users_data.append({
+                    'name': name,
+                    'user_id': user_id,
+                    'registration_date': reg_date,
+                    'image_url': image_url 
+                })
+            return users_data
+    try: 
+        return execute_with_retry(_get_users)
+    except Exception as e: 
+        print(f"Error getting users: {e}")
+        traceback.print_exc()
+        return []
+# --- END OF MODIFIED get_all_users_from_db ---
 
 def add_user_to_db(name, user_id):
     def _add():
@@ -164,20 +192,98 @@ def add_user_to_db(name, user_id):
     except: return False
 
 def delete_user_from_db(user_id):
-    def _delete():
-        with get_db_connection() as conn:
-            cur = conn.cursor()
-            name_res = cur.execute("SELECT name FROM users WHERE user_id = ?", (user_id,)).fetchone()
-            if not name_res: return False, None
-            deleted = cur.execute("DELETE FROM users WHERE user_id = ?", (user_id,)).rowcount > 0
-            return deleted, name_res[0]
+    def _delete_with_manual_cascade_fallback():
+        with get_db_connection() as conn: # PRAGMA foreign_keys = ON is set here
+            cursor = conn.cursor()
+            
+            # Get user name first (for directory deletion)
+            cursor.execute("SELECT name FROM users WHERE user_id = ?", (user_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                print(f"User ID {user_id} not found for deletion.")
+                return False, None
+            user_name = result[0]
+
+            try:
+                # Attempt to delete the user. If PRAGMA foreign_keys=ON is working,
+                # ON DELETE CASCADE should handle related records.
+                cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+                deleted_count = cursor.rowcount
+                if deleted_count > 0:
+                    print(f"Successfully deleted user {user_name} (ID: {user_id}) and cascaded related records.")
+                    return True, user_name
+                else:
+                    # This case should ideally not be hit if user existed,
+                    # but as a safeguard if PRAGMA isn't effective.
+                    print(f"User {user_name} (ID: {user_id}) found but not deleted by direct query. Attempting manual cascade.")
+            
+            except sqlite3.IntegrityError as e:
+                # This block will be hit if PRAGMA foreign_keys=ON is NOT effectively enabling CASCADE
+                # or if there's some other constraint issue not covered by CASCADE (less likely here).
+                print(f"FOREIGN KEY constraint failed for user {user_id} (Error: {e}). Attempting manual deletion of dependent records.")
+                conn.rollback() # Rollback the failed delete attempt on users table
+
+                # Manually delete dependent records
+                print(f"Manually deleting attendance records for user_id: {user_id}")
+                cursor.execute("DELETE FROM attendance WHERE user_id = ?", (user_id,))
+                print(f"Manually deleting embeddings for user_id: {user_id}")
+                cursor.execute("DELETE FROM embeddings WHERE user_id = ?", (user_id,))
+                
+                # Now try deleting the user again
+                print(f"Retrying deletion of user_id: {user_id} from users table.")
+                cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+                deleted_count = cursor.rowcount
+                if deleted_count > 0:
+                    print(f"Successfully deleted user {user_name} (ID: {user_id}) after manual cascade.")
+                    return True, user_name
+                else:
+                    print(f"Failed to delete user {user_name} (ID: {user_id}) even after manual cascade.")
+                    return False, user_name # Return user_name for potential directory cleanup
+
+            # If we reach here, it means the user was found but not deleted by the first attempt,
+            # and no IntegrityError was caught (which is unusual if PRAGMA isn't working).
+            # This is a fallback for an unexpected state.
+            print(f"User {user_name} (ID: {user_id}) was found but not deleted, and no IntegrityError was caught. This is unexpected.")
+            return False, user_name
+
+
     try:
-        deleted, user_name = execute_with_retry(_delete)
-        if deleted and user_name:
-            for d in [f'static/faces/{user_name}_{user_id}', f'static/temp_embeddings/{user_name}_{user_id}']:
-                if os.path.exists(d): shutil.rmtree(d, ignore_errors=True)
+        # Use the new internal function name for execute_with_retry
+        deleted, user_name_for_cleanup = execute_with_retry(_delete_with_manual_cascade_fallback)
+        
+        if deleted and user_name_for_cleanup:
+            # Directory cleanup logic
+            user_faces_dir = f'static/faces/{user_name_for_cleanup}_{user_id}'
+            user_temp_embeddings_dir = f'static/temp_embeddings/{user_name_for_cleanup}_{user_id}'
+            
+            if os.path.exists(user_faces_dir):
+                shutil.rmtree(user_faces_dir, ignore_errors=True)
+                print(f"Cleaned up directory: {user_faces_dir}")
+            if os.path.exists(user_temp_embeddings_dir):
+                shutil.rmtree(user_temp_embeddings_dir, ignore_errors=True)
+                print(f"Cleaned up directory: {user_temp_embeddings_dir}")
+            
+            # Optional: Update CSVs (DB is primary source of truth now)
+            # This part can be kept or removed based on how critical CSVs are
+            try:
+                for attendance_file in [f for f in os.listdir('Attendance') if f.endswith('.csv')]:
+                    file_path = os.path.join('Attendance', attendance_file)
+                    df = pd.read_csv(file_path)
+                    # Ensure comparison is robust, e.g., by converting both to string or appropriate type
+                    if 'Roll' in df.columns and str(user_id) in df['Roll'].astype(str).values:
+                        df = df[df['Roll'].astype(str) != str(user_id)]
+                        df.to_csv(file_path, index=False)
+                        print(f"Updated CSV: {file_path}")
+            except Exception as e:
+                print(f"Error updating CSVs during user deletion: {e}")
+                
         return deleted
-    except: return False
+    except Exception as e:
+        print(f"Outer error in delete_user_from_db for user_id {user_id}: {e}")
+        traceback.print_exc()
+        return False
+
 
 def save_embedding(user_id, embedding):
     def _save():
@@ -199,7 +305,6 @@ def get_all_embeddings():
     try: return execute_with_retry(_get)
     except: return {}
 
-# --- MODIFIED add_attendance function ---
 def add_attendance(name, user_id):
     def _add():
         with get_db_connection() as conn:
@@ -207,30 +312,49 @@ def add_attendance(name, user_id):
             now = datetime.now(ist)
             date_db = now.strftime("%Y-%m-%d")
             time_db_24hr = now.strftime("%H:%M:%S")
+
+            # --- COOLDOWN CHECK (2 minutes = 120 seconds) ---
+            cursor.execute(
+                "SELECT time FROM attendance WHERE user_id = ? AND date = ? ORDER BY time DESC LIMIT 1",
+                (user_id, date_db)
+            )
+            last_entry = cursor.fetchone()
+            if last_entry:
+                last_time_str = last_entry[0]
+                try:
+                    last_time_obj = datetime.strptime(last_time_str, "%H:%M:%S").time()
+                    current_time_obj_for_compare = datetime.strptime(time_db_24hr, "%H:%M:%S").time()
+                    
+                    dummy_date = date(2000, 1, 1) # Use a common dummy date for comparison
+                    last_datetime_combined = datetime.combine(dummy_date, last_time_obj)
+                    current_datetime_combined = datetime.combine(dummy_date, current_time_obj_for_compare)
+                    
+                    time_difference_seconds = (current_datetime_combined - last_datetime_combined).total_seconds()
+                    
+                    # Check if current time is after last time and within cooldown
+                    if 0 <= time_difference_seconds < 120: 
+                        print(f"Cooldown: User {name} (ID: {user_id}) logged {time_difference_seconds:.0f}s ago. Not logging again yet.")
+                        return False, "COOLDOWN" 
+                except ValueError as ve:
+                    print(f"Error parsing time for cooldown check: {ve}")
+            # --- END COOLDOWN CHECK ---
             
-            # REMOVED: Check for existing attendance on the same day.
-            # cursor.execute("SELECT 1 FROM attendance WHERE user_id = ? AND date = ?", (user_id, date_db))
-            # if cursor.fetchone(): return False, None # Already marked
-            
-            # Always insert a new record for each recognition
             cursor.execute("INSERT INTO attendance (user_id, name, date, time) VALUES (?, ?, ?, ?)", 
                            (user_id, name, date_db, time_db_24hr))
             
-            # Update CSV (datetoday is IST based for filename)
             csv_path = f'Attendance/Attendance-{datetoday}.csv'
             if not os.path.exists(csv_path):
                 with open(csv_path, 'w') as f: f.write('Name,Roll,Time\n')
             with open(csv_path, 'a') as f: f.write(f'{name},{user_id},{time_db_24hr}\n')
             
             print(f"Logged attendance for {name} (ID: {user_id}) at {time_db_24hr} (IST).")
-            return True, format_time_to_12hr(time_db_24hr) # Return formatted time
+            return True, format_time_to_12hr(time_db_24hr)
     try: 
         return execute_with_retry(_add)
     except Exception as e: 
         print(f"Error adding attendance: {e}")
         traceback.print_exc()
         return False, None
-# --- END OF MODIFIED add_attendance function ---
 
 def extract_face(img_pil, box, image_size=160, margin=20):
     try:
@@ -283,21 +407,19 @@ def attendance_page():
             dt_obj = datetime.strptime(selected_date, "%Y-%m-%d")
             display_date = dt_obj.strftime("%d-%B-%Y")
             picker_date = selected_date
-        except ValueError: pass # Keep defaults if date is invalid
+        except ValueError: pass 
     
-    # Add today's date for the empty state check in Jinja
     today_for_check_yyyymmdd = datetime.now(ist).strftime("%Y-%m-%d")
 
     return render_template('attendance.html', names=names, rolls=rolls, times=times, l=l,
                            datetoday2_display=display_date, selected_date_for_picker=picker_date,
-                           today_date_for_check=today_for_check_yyyymmdd, # Pass this new variable
+                           today_date_for_check=today_for_check_yyyymmdd, 
                            mess=request.args.get('mess'))
 
 @app.route('/user-management')
 def user_management_page():
     return render_template('user_management.html', totalreg=get_total_users(), datetoday2=datetoday2_default, mess=request.args.get('mess'))
 
-# --- MODIFIED /mark_attendance route ---
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance_route():
     try:
@@ -327,19 +449,18 @@ def mark_attendance_route():
         if name == "Unknown":
             return jsonify({'success': False, 'message': 'Unknown person detected'})
         
-        # add_attendance now logs every instance
-        logged, time_logged_12hr = add_attendance(name, user_id_str) 
+        logged, status_or_time = add_attendance(name, user_id_str) 
         
         if logged:
-            return jsonify({'success': True, 'message': f'Attendance logged for {name} at {time_logged_12hr}', 'name': name, 'user_id': user_id_str, 'time': time_logged_12hr})
+            return jsonify({'success': True, 'message': f'Attendance logged for {name} at {status_or_time}', 'name': name, 'user_id': user_id_str, 'time': status_or_time})
+        elif status_or_time == "COOLDOWN":
+            return jsonify({'success': False, 'message': 'COOLDOWN'})
         else:
-            # This case is now less likely, would mean a DB insert error in add_attendance
             return jsonify({'success': False, 'message': f'Failed to log attendance for {name}'})
             
     except Exception as e:
         print(f"Error in /mark_attendance: {e}"); traceback.print_exc()
         return jsonify({'success': False, 'message': f'An unexpected error occurred: {str(e)}'})
-# --- END OF MODIFIED /mark_attendance route ---
 
 @app.route('/get_attendance')
 def get_attendance_route():
